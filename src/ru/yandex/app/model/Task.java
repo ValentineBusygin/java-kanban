@@ -1,8 +1,12 @@
+package ru.yandex.app.model;
+
 public class Task {
 
     protected int taskID = -1;
 
     protected String taskName;
+
+    protected String taskDescription;
 
     protected TaskState taskState = TaskState.NEW; //По умолчанию всегда инициализируем NEW
 
@@ -10,20 +14,28 @@ public class Task {
         this.taskName = taskName;
     }
 
-    public Task(String taskName, TaskState taskState) {
+    public Task(String taskName, String taskDescription) {
         this.taskName = taskName;
-        this.taskState = taskState;
+        this.taskDescription = taskDescription;
     }
 
-    public Task(int taskId, String taskName) {
-        this.taskID = taskId;
+    public Task(String taskName, String taskDescription, TaskState taskState) {
         this.taskName = taskName;
+        this.taskState = taskState;
+        this.taskDescription = taskDescription;
     }
 
-    public Task(int taskId, String taskName, TaskState taskState) {
+    public Task(int taskId, String taskName, String taskDescription) {
+        this.taskID = taskId;
+        this.taskName = taskName;
+        this.taskDescription = taskDescription;
+    }
+
+    public Task(int taskId, String taskName, String taskDescription, TaskState taskState) {
         this.taskID = taskId;
         this.taskName = taskName;
         this.taskState = taskState;
+        this.taskDescription = taskDescription;
     }
 
     public void setTaskID(int taskID) {
@@ -50,24 +62,36 @@ public class Task {
         this.taskName = taskName;
     }
 
+    public String getTaskDescription() {
+        return taskDescription;
+    }
+
+    public void setTaskDescription(String taskDescription) {
+        this.taskDescription = taskDescription;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Task task = (Task) o;
-        return taskID == task.taskID && taskName.equals(task.taskName) && taskState == task.taskState;
+        return taskID == task.taskID
+                && taskName.equals(task.taskName)
+                && taskDescription.equals(task.taskDescription)
+                && taskState == task.taskState;
     }
 
     @Override
     public int hashCode() {
-        return taskID + taskName.hashCode() + taskState.hashCode(); //Пока что не нужно вычислять контрольную сумму - достаточно только ID таска
+        return taskID + taskName.hashCode() + taskDescription.hashCode() + taskState.hashCode(); //Пока что не нужно вычислять контрольную сумму - достаточно только ID таска
     }
 
     @Override
     public String toString() {
-        return "Task{" +
+        return "ru.yandex.app.model.Task{" +
                 "taskID=" + taskID +
                 ", taskName='" + taskName + '\'' +
+                ", taskDescription='" + taskDescription + '\'' +
                 ", taskState=" + taskState +
                 '}';
     }
