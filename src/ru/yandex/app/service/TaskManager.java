@@ -2,13 +2,14 @@ package ru.yandex.app.service;
 
 import java.util.HashMap;
 import java.util.ArrayList;
+
 import ru.yandex.app.model.*;
 
 public class TaskManager {
 
-    private HashMap<Integer, Task> tasks = new HashMap<Integer, Task>();
-    private HashMap<Integer, EpicTask> epicTasks = new HashMap<Integer, EpicTask>();
-    private HashMap<Integer, SubTask> subTasks = new HashMap<Integer, SubTask>();
+    private final HashMap<Integer, Task> tasks = new HashMap<>();
+    private final HashMap<Integer, EpicTask> epicTasks = new HashMap<>();
+    private final HashMap<Integer, SubTask> subTasks = new HashMap<>();
 
     private int nextTaskId = 1;
 
@@ -44,10 +45,7 @@ public class TaskManager {
         EpicTask epicTask = epicTasks.get(epicTaskId);
         if (epicTask != null) {
             for (int epicSubTaskId : epicTask.getSubTaskIds()) {
-                SubTask epicSubTask = subTasks.get(epicSubTaskId);
-                if (epicSubTask != null) {
-                    epicSubTasks.add(epicSubTask);
-                }
+                epicSubTasks.add(subTasks.get(epicSubTaskId));
             }
         }
 
@@ -104,36 +102,16 @@ public class TaskManager {
     }
 
     public void clearEpicTasks() {
-        //Сначала убираем все подзадачи и ссылки на них, потом очищаем эпики
-        clearSubTasks();
+        subTasks.clear();
         epicTasks.clear();
     }
 
     public void clearSubTasks() {
-        for (SubTask subTask : subTasks.values()) {
-            EpicTask subTaskEpicTask = epicTasks.get(subTask.getEpicId());
-            subTaskEpicTask.removeSubTask(subTask.getTaskID());
+        for (EpicTask epicTask : epicTasks.values()) {
+            epicTask.cleanSubTasks();
         }
 
         subTasks.clear();
-    }
-
-    public void showAllTasks() {
-        showTasks();
-        showEpicTasks();
-        showSubTasks();
-    }
-
-    public void showTasks() {
-        System.out.println(tasks);
-    }
-
-    public void showEpicTasks() {
-        System.out.println(epicTasks);
-    }
-
-    public void showSubTasks() {
-        System.out.println(subTasks);
     }
 
     public TaskTypes getTaskTypeById(int taskId) {
@@ -151,27 +129,15 @@ public class TaskManager {
     }
 
     public Task getTaskById(int taskId) {
-        if (tasks.containsKey(taskId)) {
-            return tasks.get(taskId);
-        }
-
-        return null;
+        return tasks.get(taskId);
     }
 
     public EpicTask getEpicTaskById(int epicId) {
-        if (epicTasks.containsKey(epicId)) {
-            return epicTasks.get(epicId);
-        }
-
-        return null;
+        return epicTasks.get(epicId);
     }
 
     public SubTask getSubTaskById(int subTaskId) {
-        if (subTasks.containsKey(subTaskId)) {
-            return subTasks.get(subTaskId);
-        }
-
-        return null;
+        return subTasks.get(subTaskId);
     }
 
     public void updateTask(Task newTask) {
@@ -188,41 +154,19 @@ public class TaskManager {
 
     public void updateEpicTask(EpicTask newEpicTask) {
         int epicTaskId = newEpicTask.getTaskID();
-        if (epicTasks.containsKey(epicTaskId)) {
-            EpicTask oldEpicTask = epicTasks.get(epicTaskId);
+            final EpicTask oldEpicTask = epicTasks.get(epicTaskId);
+            if (oldEpicTask == null) {
+                return;
+            }
+
             if (oldEpicTask.equals(newEpicTask)) {
                 return;
             }
 
-            //Обновляем ID эпиков в subtask`ах
-            //В ТЗ нет четкого указания на состав обновляемых полей - поэтому проверяем/обновляем вообще всё
-            ArrayList<Integer> oldEpicSubTaskIds = oldEpicTask.getSubTaskIds();
-            ArrayList<Integer> newEpicSubTaskIds = newEpicTask.getSubTaskIds();
-            if (!oldEpicSubTaskIds.equals(newEpicSubTaskIds)) {
+            oldEpicTask.setTaskName(newEpicTask.getTaskName());
+            oldEpicTask.setTaskDescription(newEpicTask.getTaskDescription());
 
-                //Создаем копию массива подзадач "старого" эпика, потому что в дальнейшем потребуется фильтрация по
-                // полному списку
-                ArrayList<Integer> subTasksForRemoveEpic = (ArrayList) oldEpicSubTaskIds.clone();
-                if (subTasksForRemoveEpic.removeAll(newEpicSubTaskIds)) {
-                    for (int subTaskId : subTasksForRemoveEpic) {
-                        SubTask subTask = subTasks.get(subTaskId);
-                        subTask.setEpicId(-1);
-                    }
-                }
-
-                //Создаем копию массива подзадач "нового" для единообразия обработки
-                ArrayList<Integer> subTasksForAddEpic = (ArrayList) newEpicSubTaskIds.clone();
-                if (subTasksForAddEpic.removeAll(oldEpicSubTaskIds)) {
-                    for (int subTaskId : subTasksForAddEpic) {
-                        SubTask subTask = subTasks.get(subTaskId);
-                        subTask.setEpicId(epicTaskId);
-                    }
-                }
-            }
-
-            epicTasks.replace(epicTaskId, newEpicTask);
-            recalculateEpicStatus(newEpicTask);
-        }
+            recalculateEpicStatus(oldEpicTask);
     }
 
     public void updateSubTask(SubTask newSubTask) {
@@ -259,10 +203,7 @@ public class TaskManager {
 
             ArrayList<Integer> epicSubTaskIds = epicTask.getSubTaskIds();
             for (int epicSubTaskId : epicSubTaskIds) {
-                SubTask epicSubTask = subTasks.get(epicSubTaskId);
-                if (epicSubTask != null) {
-                    epicSubTask.setEpicId(-1);
-                }
+                subTasks.remove(epicSubTaskId);
             }
 
             epicTasks.remove(epicTaskId);
@@ -285,6 +226,11 @@ public class TaskManager {
     private void recalculateEpicStatus(EpicTask epicTask) {
         ArrayList<Integer> subTaskIds = epicTask.getSubTaskIds();
 
+        if (subTaskIds.isEmpty()) {
+            epicTask.setTaskState(TaskState.NEW);
+            return;
+        }
+
         boolean epicDone = true;
         boolean epicNew = true;
 
@@ -295,9 +241,8 @@ public class TaskManager {
                     epicDone = false;
                     break;
                 case IN_PROGRESS:
-                    epicDone = false;
-                    epicNew = false;
-                    break;
+                    epicTask.setTaskState(TaskState.NEW);
+                    return;
                 case DONE:
                     epicNew = false;
                     break;

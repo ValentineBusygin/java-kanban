@@ -2,6 +2,7 @@ package ru.yandex.app;
 
 import java.util.ArrayList;
 import java.util.Scanner;
+
 import ru.yandex.app.model.*;
 import ru.yandex.app.service.*;
 
@@ -71,20 +72,31 @@ public class Main {
         System.out.println("3 - Получить данные по подзадачам");
         System.out.println("4 - Получить данные по всем задачам независимо от типа");
         System.out.println("0 - Вернуться в меню");
+        ArrayList<Task> tasks;
+        ArrayList<EpicTask> epicTasks;
+        ArrayList<SubTask> subTasks;
 
         int actionId = scanner.nextInt();
         switch (actionId) {
             case 1:
-                taskManager.showTasks();
+                tasks = taskManager.getTasks();
+                System.out.println(tasks);
                 break;
             case 2:
-                taskManager.showEpicTasks();
+                epicTasks = taskManager.getEpicTasks();
+                System.out.println(epicTasks);
                 break;
             case 3:
-                taskManager.showSubTasks();
+                subTasks = taskManager.getSubTasks();
+                System.out.println(subTasks);
                 break;
             case 4:
-                taskManager.showAllTasks();
+                tasks = taskManager.getTasks();
+                System.out.println(tasks);
+                epicTasks = taskManager.getEpicTasks();
+                System.out.println(epicTasks);
+                subTasks = taskManager.getSubTasks();
+                System.out.println(subTasks);
                 break;
             case 0:
                 return;
@@ -208,6 +220,7 @@ public class Main {
         while (true) {
             System.out.println("Выберите параметр для изменения:");
             System.out.println("1 - Название задачи");
+            System.out.println("1 - Описание задачи");
             System.out.println("2 - Статус задачи");
             System.out.println("3 - Сохранить изменения и выйти");
             System.out.println("0 - Вернуться в меню без сохранения");
@@ -219,10 +232,14 @@ public class Main {
                     newTask.setTaskName(newName);
                     break;
                 case 2:
+                    String newDescription = getNewTaskDescription(scanner);
+                    newTask.setTaskDescription(newDescription);
+                    break;
+                case 3:
                     TaskState newState = getNewTaskStatus(scanner);
                     newTask.setTaskState(newState);
                     break;
-                case 3:
+                case 4:
                     taskManager.updateTask(newTask);
                     break;
                 case 0:
@@ -238,9 +255,8 @@ public class Main {
         while (true) {
             System.out.println("Выберите параметр для изменения:");
             System.out.println("1 - Название задачи");
-            System.out.println("2 - Сохранить изменения и выйти");
-            System.out.println("3 - Добавить подзадачу");
-            System.out.println("4 - Удалить подзадачу");
+            System.out.println("2 - Описание задачи");
+            System.out.println("3 - Сохранить изменения и выйти");
             System.out.println("0 - Вернуться в меню без сохранения");
 
             int actionId = scanner.nextInt();
@@ -250,68 +266,14 @@ public class Main {
                     newEpicTask.setTaskName(newName);
                     break;
                 case 2:
-                    taskManager.updateEpicTask(newEpicTask);
+                    String newDescription = getNewTaskDescription(scanner);
+                    newEpicTask.setTaskDescription(newDescription);
                     break;
                 case 3:
-                    addSubTaskToEpic(scanner, taskManager, newEpicTask);
-                    break;
-                case 4:
-                    removeSubTaskFromEpic(scanner, newEpicTask);
+                    taskManager.updateEpicTask(newEpicTask);
                     break;
                 case 0:
                     return;
-            }
-        }
-    }
-
-    private static void removeSubTaskFromEpic(Scanner scanner, EpicTask epicTask) {
-        ArrayList<Integer> subTasks = epicTask.getSubTaskIds();
-        if (subTasks.isEmpty()) {
-            System.out.println("Подзадачи для выбранного эпика отсутствуют");
-        } else {
-            while (true) {
-                System.out.println("В эпик включены следующие задачи:");
-                System.out.println(subTasks);
-                System.out.println("Введите номер подзадачи для удаления (или -1 для выхода):");
-
-                int subTaskId = scanner.nextInt();
-
-                if (subTaskId == -1) {
-                    return;
-                }
-
-                if (subTasks.contains(subTaskId)) {
-                    epicTask.removeSubTask(subTaskId);
-                    subTasks = epicTask.getSubTaskIds();
-                } else {
-                    System.out.println("Указанный номер подзадачи отсутствует в эпике");
-                }
-
-            }
-        }
-    }
-
-    private static void addSubTaskToEpic(Scanner scanner, TaskManager taskManager, EpicTask epicTask) {
-        ArrayList<Integer> subTasks = epicTask.getSubTaskIds();
-
-        while (true) {
-            System.out.println("В эпик включены следующие задачи:");
-            System.out.println(subTasks);
-            System.out.println("Введите номер подзадачи для добавления (или -1 для выхода):");
-
-            int subTaskId = scanner.nextInt();
-
-            if (subTaskId == -1) {
-                return;
-            }
-
-            if (!subTasks.contains(subTaskId)) {
-                if (taskManager.isSubTaskExists(subTaskId)) {
-                    epicTask.addSubTask(subTaskId);
-                    subTasks = epicTask.getSubTaskIds();
-                }
-            } else {
-                System.out.println("Указанный номер подзадачи уже присутствует в эпике");
             }
         }
     }
@@ -324,6 +286,7 @@ public class Main {
         while (true) {
             System.out.println("Выберите параметр для изменения:");
             System.out.println("1 - Название задачи");
+            System.out.println("1 - Описание задачи");
             System.out.println("2 - Статус задачи");
             System.out.println("3 - Эпик, к которому относится задача");
             System.out.println("4 - Сохранить изменения и выйти");
@@ -336,19 +299,23 @@ public class Main {
                     newSubTask.setTaskName(newName);
                     break;
                 case 2:
+                    String newDescription = getNewTaskDescription(scanner);
+                    newSubTask.setTaskDescription(newDescription);
+                    break;
+                case 3:
                     TaskState newState = getNewTaskStatus(scanner);
                     newSubTask.setTaskState(newState);
                     break;
-                case 3:
+                case 4:
                     int epicTaskId = getNewEpic(scanner, taskManager);
                     if (epicTaskId != -1) {
                         newSubTask.setEpicId(epicTaskId);
                     }
                     break;
-                case 4:
+                case 5:
                     taskManager.updateSubTask(newSubTask);
                     break;
-                case 0:
+                case 6:
                     return;
             }
         }
@@ -356,6 +323,11 @@ public class Main {
 
     private static String getNewTaskName(Scanner scanner) {
         System.out.println("Введите новое имя:");
+        return scanner.nextLine();
+    }
+
+    private static String getNewTaskDescription(Scanner scanner) {
+        System.out.println("Введите новое описание:");
         return scanner.nextLine();
     }
 

@@ -4,7 +4,7 @@ import java.util.Objects;
 
 public class SubTask extends Task {
 
-    private int epicId = -1;
+    private int epicId;
 
     public SubTask(String taskName, String taskDescription, int epicId) {
         super(taskName, taskDescription, TaskState.NEW);
