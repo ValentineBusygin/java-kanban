@@ -10,20 +10,21 @@ public class Main {
 
     public static void main(String[] args) {
 
+        Managers manager = new Managers();
         Scanner scanner = new Scanner(System.in);
 
-        TaskManager taskManager = new TaskManager();
+        InMemoryTaskManager inMemoryTaskManager = (InMemoryTaskManager) manager.createTaskManger(TaskManagerTypes.IN_MEMORY_TASK_MANAGER);
 
         EpicTask epic1 = new EpicTask("EpicTaskOne", "EpicTaskOneDescription");
-        taskManager.addEpicTask(epic1);
+        inMemoryTaskManager.addEpicTask(epic1);
 
         SubTask subTask1 = new SubTask("SubTaskOne", "SubTaskOneDescription", epic1.getTaskID());
         subTask1.setTaskState(TaskState.NEW);
-        taskManager.addSubTask(subTask1);
+        inMemoryTaskManager.addSubTask(subTask1);
 
         SubTask subTask2 = new SubTask("SubTaskTwo", "SubTaskTwoDescription", epic1.getTaskID());
         subTask2.setTaskState(TaskState.NEW);
-        taskManager.addSubTask(subTask2);
+        inMemoryTaskManager.addSubTask(subTask2);
 
         while (true) {
             printMenu();
@@ -31,22 +32,22 @@ public class Main {
             int actionId = scanner.nextInt();
             switch (actionId) {
                 case 1:
-                    getTasksList(scanner, taskManager);
+                    getTasksList(scanner, inMemoryTaskManager);
                     break;
                 case 2:
-                    getTaskByID(scanner, taskManager);
+                    getTaskByID(scanner, inMemoryTaskManager);
                     break;
                 case 3:
-                    createTaskElement(scanner, taskManager);
+                    createTaskElement(scanner, inMemoryTaskManager);
                     break;
                 case 4:
-                    updateTaskElement(scanner, taskManager);
+                    updateTaskElement(scanner, inMemoryTaskManager);
                     break;
                 case 5:
-                    removeTaskByID(scanner, taskManager);
+                    removeTaskByID(scanner, inMemoryTaskManager);
                     break;
                 case 6:
-                    taskManager.clearAllTasks();
+                    inMemoryTaskManager.clearAllTasks();
                     break;
                 case 0:
                     return;
@@ -65,7 +66,7 @@ public class Main {
         System.out.println("0 - Выход");
     }
 
-    private static void getTasksList(Scanner scanner, TaskManager taskManager) {
+    private static void getTasksList(Scanner scanner, InMemoryTaskManager inMemoryTaskManager) {
         System.out.println("Выберите данные для получения:");
         System.out.println("1 - Получить данные по обычным задачам");
         System.out.println("2 - Получить данные по эпикам");
@@ -79,23 +80,23 @@ public class Main {
         int actionId = scanner.nextInt();
         switch (actionId) {
             case 1:
-                tasks = taskManager.getTasks();
+                tasks = inMemoryTaskManager.getTasks();
                 System.out.println(tasks);
                 break;
             case 2:
-                epicTasks = taskManager.getEpicTasks();
+                epicTasks = inMemoryTaskManager.getEpicTasks();
                 System.out.println(epicTasks);
                 break;
             case 3:
-                subTasks = taskManager.getSubTasks();
+                subTasks = inMemoryTaskManager.getSubTasks();
                 System.out.println(subTasks);
                 break;
             case 4:
-                tasks = taskManager.getTasks();
+                tasks = inMemoryTaskManager.getTasks();
                 System.out.println(tasks);
-                epicTasks = taskManager.getEpicTasks();
+                epicTasks = inMemoryTaskManager.getEpicTasks();
                 System.out.println(epicTasks);
-                subTasks = taskManager.getSubTasks();
+                subTasks = inMemoryTaskManager.getSubTasks();
                 System.out.println(subTasks);
                 break;
             case 0:
@@ -103,26 +104,26 @@ public class Main {
         }
     }
 
-    public static void getTaskByID(Scanner scanner, TaskManager taskManager) {
+    public static void getTaskByID(Scanner scanner, InMemoryTaskManager inMemoryTaskManager) {
         System.out.println("Введите идентификатор задачи, информацию по которой хотите получить:");
         int taskId = scanner.nextInt();
-        TaskTypes taskType = taskManager.getTaskTypeById(taskId);
+        TaskTypes taskType = inMemoryTaskManager.getTaskTypeById(taskId);
         switch (taskType) {
             case TaskTypes.TASK:
-                System.out.println(taskManager.getTaskById(taskId));
+                System.out.println(inMemoryTaskManager.getTaskById(taskId));
                 break;
             case TaskTypes.EPIC_TASK:
-                System.out.println(taskManager.getEpicTaskById(taskId));
+                System.out.println(inMemoryTaskManager.getEpicTaskById(taskId));
                 break;
             case TaskTypes.SUB_TASK:
-                System.out.println(taskManager.getSubTaskById(taskId));
+                System.out.println(inMemoryTaskManager.getSubTaskById(taskId));
                 break;
             default:
                 System.out.println("Задачи с указанным идентификатором не обнаружено");
         }
     }
 
-    private static void createTaskElement(Scanner scanner, TaskManager taskManager) {
+    private static void createTaskElement(Scanner scanner, InMemoryTaskManager inMemoryTaskManager) {
         System.out.println("Выберите тип задачи для создания:");
         System.out.println("1 - Простая задача");
         System.out.println("2 - Эпик");
@@ -132,20 +133,20 @@ public class Main {
         int actionId = scanner.nextInt();
         switch (actionId) {
             case 1:
-                createTask(scanner, taskManager);
+                createTask(scanner, inMemoryTaskManager);
                 break;
             case 2:
-                createEpicTask(scanner, taskManager);
+                createEpicTask(scanner, inMemoryTaskManager);
                 break;
             case 3:
-                createSubTask(scanner, taskManager);
+                createSubTask(scanner, inMemoryTaskManager);
                 break;
             case 0:
                 return;
         }
     }
 
-    private static void createTask(Scanner scanner, TaskManager taskManager) {
+    private static void createTask(Scanner scanner, InMemoryTaskManager inMemoryTaskManager) {
         System.out.println("Введите название задачи");
         String taskName = scanner.nextLine();
 
@@ -153,10 +154,10 @@ public class Main {
         String taskDescription = scanner.nextLine();
 
         Task newTask = new Task(taskName, taskDescription);
-        taskManager.addTask(newTask);
+        inMemoryTaskManager.addTask(newTask);
     }
 
-    private static void createEpicTask(Scanner scanner, TaskManager taskManager) {
+    private static void createEpicTask(Scanner scanner, InMemoryTaskManager inMemoryTaskManager) {
         System.out.println("Введите название эпика");
         String epicTaskName = scanner.nextLine();
 
@@ -164,15 +165,15 @@ public class Main {
         String taskDescription = scanner.nextLine();
 
         Task newEpicTask = new EpicTask(epicTaskName, taskDescription);
-        taskManager.addTask(newEpicTask);
+        inMemoryTaskManager.addTask(newEpicTask);
     }
 
-    private static void createSubTask(Scanner scanner, TaskManager taskManager) {
+    private static void createSubTask(Scanner scanner, InMemoryTaskManager inMemoryTaskManager) {
         int epicTaskId;
         while (true) {
             System.out.println("Введите идентификатор эпика");
             epicTaskId = scanner.nextInt();
-            boolean epicTaskExists = taskManager.isEpicTaskExists(epicTaskId);
+            boolean epicTaskExists = inMemoryTaskManager.isEpicTaskExists(epicTaskId);
             if (epicTaskId != -1 && !epicTaskExists) {
                 System.out.println("Эпика с указанным идентификатором не найдено. Введите существующий или '-1' для выхода");
                 continue;
@@ -190,31 +191,31 @@ public class Main {
         String taskDescription = scanner.nextLine();
 
         SubTask subTask = new SubTask(taskName, taskDescription, epicTaskId);
-        taskManager.addSubTask(subTask);
+        inMemoryTaskManager.addSubTask(subTask);
     }
 
-    private static void updateTaskElement(Scanner scanner, TaskManager taskManager) {
+    private static void updateTaskElement(Scanner scanner, InMemoryTaskManager inMemoryTaskManager) {
         System.out.println("Введите идентификатор задачи для обновления");
         int taskId = scanner.nextInt();
 
-        TaskTypes taskType = taskManager.getTaskTypeById(taskId);
+        TaskTypes taskType = inMemoryTaskManager.getTaskTypeById(taskId);
         switch (taskType) {
             case TaskTypes.TASK:
-                updateTask(scanner, taskManager, taskId);
+                updateTask(scanner, inMemoryTaskManager, taskId);
                 break;
             case TaskTypes.EPIC_TASK:
-                updateEpicTaskElement(scanner, taskManager, taskId);
+                updateEpicTaskElement(scanner, inMemoryTaskManager, taskId);
                 break;
             case TaskTypes.SUB_TASK:
-                updateSubTask(scanner, taskManager, taskId);
+                updateSubTask(scanner, inMemoryTaskManager, taskId);
                 break;
             default:
                 System.out.println("Задачи с указанным идентификатором не обнаружено");
         }
     }
 
-    private static void updateTask(Scanner scanner, TaskManager taskManager, int taskId) {
-        Task oldTask = taskManager.getTaskById(taskId);
+    private static void updateTask(Scanner scanner, InMemoryTaskManager inMemoryTaskManager, int taskId) {
+        Task oldTask = inMemoryTaskManager.getTaskById(taskId);
         Task newTask = new Task(oldTask.getTaskID(), oldTask.getTaskName(), oldTask.getTaskDescription(), oldTask.getTaskState());
 
         while (true) {
@@ -240,7 +241,7 @@ public class Main {
                     newTask.setTaskState(newState);
                     break;
                 case 4:
-                    taskManager.updateTask(newTask);
+                    inMemoryTaskManager.updateTask(newTask);
                     break;
                 case 0:
                     return;
@@ -248,8 +249,8 @@ public class Main {
         }
     }
 
-    private static void updateEpicTaskElement(Scanner scanner, TaskManager taskManager, int epicTaskId) {
-        EpicTask oldEpicTask = taskManager.getEpicTaskById(epicTaskId);
+    private static void updateEpicTaskElement(Scanner scanner, InMemoryTaskManager inMemoryTaskManager, int epicTaskId) {
+        EpicTask oldEpicTask = inMemoryTaskManager.getEpicTaskById(epicTaskId);
         EpicTask newEpicTask = new EpicTask(oldEpicTask.getTaskID(), oldEpicTask.getTaskDescription(), oldEpicTask.getTaskName());
 
         while (true) {
@@ -270,7 +271,7 @@ public class Main {
                     newEpicTask.setTaskDescription(newDescription);
                     break;
                 case 3:
-                    taskManager.updateEpicTask(newEpicTask);
+                    inMemoryTaskManager.updateEpicTask(newEpicTask);
                     break;
                 case 0:
                     return;
@@ -278,9 +279,9 @@ public class Main {
         }
     }
 
-    private static void updateSubTask(Scanner scanner, TaskManager taskManager, int subTaskId) {
+    private static void updateSubTask(Scanner scanner, InMemoryTaskManager inMemoryTaskManager, int subTaskId) {
 
-        SubTask oldSubTask = taskManager.getSubTaskById(subTaskId);
+        SubTask oldSubTask = inMemoryTaskManager.getSubTaskById(subTaskId);
         SubTask newSubTask = new SubTask(oldSubTask.getTaskID(), oldSubTask.getTaskName(), oldSubTask.getTaskDescription(), oldSubTask.getTaskState(), oldSubTask.getEpicId());
 
         while (true) {
@@ -307,13 +308,13 @@ public class Main {
                     newSubTask.setTaskState(newState);
                     break;
                 case 4:
-                    int epicTaskId = getNewEpic(scanner, taskManager);
+                    int epicTaskId = getNewEpic(scanner, inMemoryTaskManager);
                     if (epicTaskId != -1) {
                         newSubTask.setEpicId(epicTaskId);
                     }
                     break;
                 case 5:
-                    taskManager.updateSubTask(newSubTask);
+                    inMemoryTaskManager.updateSubTask(newSubTask);
                     break;
                 case 6:
                     return;
@@ -346,13 +347,13 @@ public class Main {
         };
     }
 
-    private static int getNewEpic(Scanner scanner, TaskManager taskManager) {
+    private static int getNewEpic(Scanner scanner, InMemoryTaskManager inMemoryTaskManager) {
         System.out.println("Введите идентификатор эпика, на который вы хотите переназначить задачу:");
 
         int epicTaskId;
         while (true) {
             epicTaskId = scanner.nextInt();
-            if (taskManager.isEpicTaskExists(epicTaskId) || epicTaskId == -1) {
+            if (inMemoryTaskManager.isEpicTaskExists(epicTaskId) || epicTaskId == -1) {
                 break;
             } else {
                 System.out.println("Эпика с указанным идентификатором не существует, введите существующий (или -1 для выхода):");
@@ -361,19 +362,19 @@ public class Main {
         return epicTaskId;
     }
 
-    private static void removeTaskByID(Scanner scanner, TaskManager taskManager) {
+    private static void removeTaskByID(Scanner scanner, InMemoryTaskManager inMemoryTaskManager) {
         System.out.println("Введите идентификатор задачи, которую хотите удалить:");
         int taskId = scanner.nextInt();
-        TaskTypes taskType = taskManager.getTaskTypeById(taskId);
+        TaskTypes taskType = inMemoryTaskManager.getTaskTypeById(taskId);
         switch (taskType) {
             case TaskTypes.TASK:
-                taskManager.removeTask(taskId);
+                inMemoryTaskManager.removeTask(taskId);
                 break;
             case TaskTypes.EPIC_TASK:
-                taskManager.removeEpicTask(taskId);
+                inMemoryTaskManager.removeEpicTask(taskId);
                 break;
             case TaskTypes.SUB_TASK:
-                taskManager.removeSubTask(taskId);
+                inMemoryTaskManager.removeSubTask(taskId);
                 break;
             default:
                 System.out.println("Задачи с указанным идентификатором не обнаружено");
