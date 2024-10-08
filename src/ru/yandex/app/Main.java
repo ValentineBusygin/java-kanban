@@ -1,6 +1,7 @@
 package ru.yandex.app;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 import ru.yandex.app.model.*;
@@ -10,10 +11,9 @@ public class Main {
 
     public static void main(String[] args) {
 
-        Managers manager = new Managers();
         Scanner scanner = new Scanner(System.in);
 
-        InMemoryTaskManager inMemoryTaskManager = (InMemoryTaskManager) manager.createTaskManger(TaskManagerTypes.IN_MEMORY_TASK_MANAGER);
+        InMemoryTaskManager inMemoryTaskManager = (InMemoryTaskManager) Managers.createTaskManger(TaskManagerTypes.IN_MEMORY_TASK_MANAGER);
 
         EpicTask epic1 = new EpicTask("EpicTaskOne", "EpicTaskOneDescription");
         inMemoryTaskManager.addEpicTask(epic1);
@@ -73,9 +73,9 @@ public class Main {
         System.out.println("3 - Получить данные по подзадачам");
         System.out.println("4 - Получить данные по всем задачам независимо от типа");
         System.out.println("0 - Вернуться в меню");
-        ArrayList<Task> tasks;
-        ArrayList<EpicTask> epicTasks;
-        ArrayList<SubTask> subTasks;
+        List<Task> tasks;
+        List<EpicTask> epicTasks;
+        List<SubTask> subTasks;
 
         int actionId = scanner.nextInt();
         switch (actionId) {

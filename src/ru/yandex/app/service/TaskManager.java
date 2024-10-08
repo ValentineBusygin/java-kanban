@@ -2,20 +2,20 @@ package ru.yandex.app.service;
 
 import ru.yandex.app.model.*;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public interface TaskManager {
     void addTask(Task task);
 
-    ArrayList<Task> getTasks();
+    List<Task> getTasks();
 
     void removeTask(int taskID);
 
     void addEpicTask(EpicTask epicTask);
 
-    ArrayList<EpicTask> getEpicTasks();
+    List<EpicTask> getEpicTasks();
 
-    ArrayList<SubTask> getEpicSubTasks(int epicTaskId);
+    List<SubTask> getEpicSubTasks(int epicTaskId);
 
     void removeEpicTask(int epicTaskId);
 
@@ -25,7 +25,7 @@ public interface TaskManager {
 
     void addSubTask(SubTask subTask);
 
-    ArrayList<SubTask> getSubTasks();
+    List<SubTask> getSubTasks();
 
     void removeSubTask(int subTaskID);
 
@@ -51,5 +51,5 @@ public interface TaskManager {
 
     void updateSubTask(SubTask newSubTask);
 
-    ArrayList<Task> getHistory();
+    List<Task> getHistory();
 }

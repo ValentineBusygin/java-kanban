@@ -3,22 +3,28 @@ package ru.yandex.app.service;
 import ru.yandex.app.model.Task;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 public class InMemoryHistoryManager implements HistoryManager {
 
-    ArrayList<Task> taskHistory = new ArrayList<>();
+    private static final int historySize = 10;
+
+    List<Task> taskHistory = new LinkedList<>();
 
     @Override
     public void add(Task task) {
-        if (taskHistory.size() == 10) {
-            taskHistory.removeFirst();
-        }
+        if (task != null) {
+            if (taskHistory.size() == historySize) {
+                taskHistory.removeFirst();
+            }
 
-        taskHistory.add(task);
+            taskHistory.add(task);
+        }
     }
 
     @Override
-    public ArrayList<Task> getHistory() {
-        return taskHistory;
+    public List<Task> getHistory() {
+        return List.copyOf(taskHistory);
     }
 }

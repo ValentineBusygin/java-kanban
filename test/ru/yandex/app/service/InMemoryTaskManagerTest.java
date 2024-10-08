@@ -2,12 +2,10 @@ package ru.yandex.app.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ru.yandex.app.model.EpicTask;
-import ru.yandex.app.model.SubTask;
-import ru.yandex.app.model.Task;
-import ru.yandex.app.model.TaskTypes;
+import ru.yandex.app.model.*;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -22,7 +20,7 @@ class InMemoryTaskManagerTest {
 
     @Test
     void workWithTask() {
-        ArrayList<Task> tasks = taskManager.getTasks();
+        List<Task> tasks = taskManager.getTasks();
         assertNotNull(tasks);
         assertEquals(tasks.size(), 0);
 
@@ -40,7 +38,7 @@ class InMemoryTaskManagerTest {
 
     @Test
     void workWIthEpicTaskAndSubTask() {
-        ArrayList<EpicTask> epicTasks = taskManager.getEpicTasks();
+        List<EpicTask> epicTasks = taskManager.getEpicTasks();
         assertNotNull(epicTasks);
         assertEquals(epicTasks.size(), 0);
 
@@ -49,14 +47,35 @@ class InMemoryTaskManagerTest {
         epicTasks = taskManager.getEpicTasks();
         assertNotNull(epicTasks);
         assertEquals(epicTasks.size(), 1);
-        newEpicTask = epicTasks.get(0); //Adding epic task changes task ID
 
-        SubTask newSubTask = new SubTask("SubTask", "SubTaskDesc", newEpicTask.getTaskID());
+        newEpicTask = epicTasks.get(0); //Adding epic task changes task ID
+        assertEquals(newEpicTask.getTaskState(), TaskState.NEW);
+
+        SubTask newSubTask = new SubTask("SubTask", "SubTaskDesc", TaskState.IN_PROGRESS, newEpicTask.getTaskID());
         taskManager.addSubTask(newSubTask);
-        ArrayList<SubTask> epicSubTasks = taskManager.getEpicSubTasks(newEpicTask.getTaskID());
+        List<SubTask> epicSubTasks = taskManager.getEpicSubTasks(newEpicTask.getTaskID());
         assertNotNull(epicSubTasks);
         assertEquals(epicSubTasks.size(), 1);
         assertEquals(epicSubTasks.get(0), newSubTask);
+
+        epicTasks = taskManager.getEpicTasks();
+        assertNotNull(epicTasks);
+
+        newEpicTask = epicTasks.get(0); //Adding epic task changes task ID
+        assertEquals(newEpicTask.getTaskState(), TaskState.IN_PROGRESS);
+
+        taskManager.removeSubTask(newSubTask.getTaskID());
+        epicTasks = taskManager.getEpicTasks();
+        newEpicTask = epicTasks.get(0); //Adding epic task changes task ID
+        assertEquals(newEpicTask.getTaskState(), TaskState.NEW);
+
+        newSubTask.setTaskState(TaskState.DONE);
+        taskManager.addSubTask(newSubTask);
+        taskManager.addSubTask(newSubTask);
+
+        epicTasks = taskManager.getEpicTasks();
+        newEpicTask = epicTasks.get(0); //Adding epic task changes task ID
+        assertEquals(newEpicTask.getTaskState(), TaskState.DONE);
 
         taskManager.removeEpicTask(newEpicTask.getTaskID());
         epicTasks = taskManager.getEpicTasks();
@@ -68,19 +87,19 @@ class InMemoryTaskManagerTest {
     void clearAllTasks() {
         EpicTask newEpicTask = new EpicTask("EpicTask", "EpicDesc");
         taskManager.addEpicTask(newEpicTask);
-        ArrayList<EpicTask> epicTasks = taskManager.getEpicTasks();
+        List<EpicTask> epicTasks = taskManager.getEpicTasks();
         assertNotNull(epicTasks);
         assertEquals(epicTasks.size(), 1);
 
         SubTask newSubTask = new SubTask("SubTask", "SubTaskDesc", newEpicTask.getTaskID());
         taskManager.addSubTask(newSubTask);
-        ArrayList<SubTask> subTasks = taskManager.getSubTasks();
+        List<SubTask> subTasks = taskManager.getSubTasks();
         assertNotNull(subTasks);
         assertEquals(subTasks.size(), 1);
 
         Task newTask = new Task("Task");
         taskManager.addTask(newTask);
-        ArrayList<Task> tasks = taskManager.getTasks();
+        List<Task> tasks = taskManager.getTasks();
         assertNotNull(tasks);
         assertEquals(tasks.size(), 1);
 
@@ -100,7 +119,7 @@ class InMemoryTaskManagerTest {
     void getTaskTypeById() {
         EpicTask newEpicTask = new EpicTask("EpicTask", "EpicDesc");
         taskManager.addEpicTask(newEpicTask);
-        ArrayList<EpicTask> epicTasks = taskManager.getEpicTasks();
+        List<EpicTask> epicTasks = taskManager.getEpicTasks();
         assertNotNull(epicTasks);
         assertEquals(epicTasks.size(), 1);
         newEpicTask = epicTasks.get(0);
@@ -112,7 +131,7 @@ class InMemoryTaskManagerTest {
     void updateTask() {
         Task newTask = new Task("Task");
         taskManager.addTask(newTask);
-        ArrayList<Task> tasks = taskManager.getTasks();
+        List<Task> tasks = taskManager.getTasks();
         assertNotNull(tasks);
         assertEquals(tasks.size(), 1);
 
