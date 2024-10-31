@@ -25,27 +25,29 @@ class InMemoryHistoryManagerTest {
         assertNotNull(tasksHistory);
         assertEquals(tasksHistory.size(), 0);
 
-        Task newTask = new Task("TestTask");
+        Task newTask = new Task(0,"TestTask","TestTask");
         historyManager.add(newTask);
         tasksHistory = historyManager.getHistory();
         assertNotNull(tasksHistory);
         assertEquals(tasksHistory.size(), 1);
         assertEquals(tasksHistory.get(0), newTask);
 
-        historyManager.add(newTask); //2
-        historyManager.add(newTask); //3
-        historyManager.add(newTask); //4
-        historyManager.add(newTask); //5
-        historyManager.add(newTask); //6
-        historyManager.add(newTask); //7
-        historyManager.add(newTask); //8
-        historyManager.add(newTask); //9
-        historyManager.add(newTask); //10
+        for (int i = 1; i < 10; i++) {
+            newTask = new Task(i,"TestTask","TestTask");
+            historyManager.add(newTask);
+        }
+
         tasksHistory = historyManager.getHistory();
         assertNotNull(tasksHistory);
         assertEquals(tasksHistory.size(), 10);
 
+        newTask = new Task(11,"TestTask","TestTask");
         historyManager.add(newTask); //11
+        tasksHistory = historyManager.getHistory();
+        assertNotNull(tasksHistory);
+        assertEquals(tasksHistory.size(), 11);
+
+        historyManager.remove(11);
         tasksHistory = historyManager.getHistory();
         assertNotNull(tasksHistory);
         assertEquals(tasksHistory.size(), 10);
