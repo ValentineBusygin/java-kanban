@@ -121,12 +121,22 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void clearTasks() {
+        for (Task task : tasks.values()) {
+            historyManager.remove(task.getTaskID());
+        }
         tasks.clear();
     }
 
     @Override
     public void clearEpicTasks() {
+        for (SubTask subTask : subTasks.values()) {
+            historyManager.remove(subTask.getTaskID());
+        }
         subTasks.clear();
+
+        for (EpicTask epicTask : epicTasks.values()) {
+            historyManager.remove(epicTask.getTaskID());
+        }
         epicTasks.clear();
     }
 
@@ -136,6 +146,9 @@ public class InMemoryTaskManager implements TaskManager {
             epicTask.cleanSubTasks();
         }
 
+        for (SubTask subTask : subTasks.values()) {
+            historyManager.remove(subTask.getTaskID());
+        }
         subTasks.clear();
     }
 

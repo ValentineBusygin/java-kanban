@@ -13,11 +13,9 @@ public class InMemoryHistoryManager implements HistoryManager {
     @Override
     public void add(Task task) {
         if (task != null) {
-            Node<Task> node = taskHash.get(task.getTaskID());
-            if (node != null) {
-                taskHistory.removeNode(node);
-            }
-            node = taskHistory.linkLast(task);
+            taskHistory.removeNode(taskHash.get(task.getTaskID()));
+
+            Node<Task> node = taskHistory.linkLast(task);
 
             taskHash.put(task.getTaskID(), node);
         }
@@ -25,9 +23,7 @@ public class InMemoryHistoryManager implements HistoryManager {
 
     @Override
     public void remove(int id) {
-        Node<Task> node = taskHash.get(id);
-        taskHistory.removeNode(node);
-        taskHash.remove(id);
+        taskHistory.removeNode(taskHash.remove(id));
     }
 
     @Override
@@ -38,7 +34,6 @@ public class InMemoryHistoryManager implements HistoryManager {
     private static class PracticumLinkedList<T> {
         public Node<T> head;
         public Node<T> tail;
-        private int size = 0;
 
         public Node<T> linkLast(T element) {
 
@@ -49,8 +44,6 @@ public class InMemoryHistoryManager implements HistoryManager {
                 tail.setNext(newNode);
             }
             tail = newNode;
-
-            size++;
 
             return newNode;
         }
@@ -71,8 +64,6 @@ public class InMemoryHistoryManager implements HistoryManager {
             if (node != null) {
                 Node<T> prev = node.getPrev();
                 Node<T> next = node.getNext();
-
-                size--;
 
                 if (prev != null) {
                     prev.setNext(next);
