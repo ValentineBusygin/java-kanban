@@ -7,8 +7,8 @@ import java.util.*;
 
 public class InMemoryHistoryManager implements HistoryManager {
 
-    PracticumLinkedList<Task> taskHistory = new PracticumLinkedList<>();
-    Map<Integer, Node<Task>> taskHash = new HashMap<>();
+    private final PracticumLinkedList<Task> taskHistory = new PracticumLinkedList<>();
+    private final Map<Integer, Node<Task>> taskHash = new HashMap<>();
 
     @Override
     public void add(Task task) {
@@ -35,20 +35,20 @@ public class InMemoryHistoryManager implements HistoryManager {
         return taskHistory.getElements();
     }
 
-    static class PracticumLinkedList<T> {
+    private static class PracticumLinkedList<T> {
         public Node<T> head;
         public Node<T> tail;
         private int size = 0;
 
         public Node<T> linkLast(T element) {
-            final Node<T> oldTail = tail;
-            final Node<T> newNode = new Node<>(element, null, oldTail);
-            tail = newNode;
-            if (oldTail == null) {
+
+            final Node<T> newNode = new Node<>(element, null, tail);
+            if (tail == null) {
                 head = newNode;
             } else {
-                oldTail.next = newNode;
+                tail.setNext(newNode);
             }
+            tail = newNode;
 
             size++;
 
@@ -56,12 +56,12 @@ public class InMemoryHistoryManager implements HistoryManager {
         }
 
         public List<T> getElements() {
-            List<T> elementsList = new ArrayList<>();
+            List<T> elementsList = new LinkedList<>();
 
             Node<T> link = head;
             while (link != null) {
-                elementsList.add(link.data);
-                link = link.next;
+                elementsList.add(link.getData());
+                link = link.getNext();
             }
 
             return elementsList;
@@ -69,35 +69,21 @@ public class InMemoryHistoryManager implements HistoryManager {
 
         public void removeNode(Node<T> node) {
             if (node != null) {
-                Node<T> prev = node.prev;
-                Node<T> next = node.next;
+                Node<T> prev = node.getPrev();
+                Node<T> next = node.getNext();
 
-                //Сразу же уменьшаем размер на 1 - в худшем случае дальше в функции значение будет установлено в 0
                 size--;
 
-                //Предыдущий элемент не пустой
                 if (prev != null) {
-                    //Следующий элемент не пустой
-                    if (next != null) {
-                        prev.next = node.next;
-                    //Следующий эелемент пустой
-                    } else {
-                        prev.next = null;
-                        tail = prev;
-                    }
-                //Предыдущий элемент пустой
+                    prev.setNext(next);
                 } else {
-                    //Следующий элемент не пустой
-                    if (next != null) {
-                        next.prev = null;
-                        head = next;
-                    //Следующий эелемент пустой
-                    } else {
-                        //Первый элемент пустой, последний элемент пустой - список полностью пуст
-                        head = null;
-                        tail = null;
-                        size = 0;
-                    }
+                    head = next;
+                }
+
+                if (next != null) {
+                    next.setPrev(prev);
+                } else {
+                    tail = prev;
                 }
             }
         }
