@@ -116,6 +116,58 @@ class InMemoryTaskManagerTest {
     }
 
     @Test
+    void removeSubTaskFromEpic() {
+        List<EpicTask> epicTasks = taskManager.getEpicTasks();
+        assertNotNull(epicTasks);
+        assertEquals(epicTasks.size(), 0);
+
+        EpicTask newEpicTask = new EpicTask("EpicTask", "EpicDesc");
+        taskManager.addEpicTask(newEpicTask);
+        epicTasks = taskManager.getEpicTasks();
+        assertNotNull(epicTasks);
+        assertEquals(epicTasks.size(), 1);
+
+        newEpicTask = epicTasks.get(0); //Adding epic task changes task ID
+
+        SubTask newSubTask = new SubTask("SubTask", "SubTaskDesc", TaskState.IN_PROGRESS, newEpicTask.getTaskID());
+        taskManager.addSubTask(newSubTask); //subtask id = 1
+        List<SubTask> epicSubTasks = taskManager.getEpicSubTasks(newEpicTask.getTaskID());
+        assertNotNull(epicSubTasks);
+        assertEquals(epicSubTasks.size(), 1);
+        assertEquals(epicSubTasks.get(0), newSubTask);
+
+        newSubTask = epicSubTasks.get(0);
+        taskManager.removeSubTask(newSubTask.getTaskID()); //removes 1
+
+        newSubTask.setTaskState(TaskState.DONE);
+        taskManager.addSubTask(newSubTask); //subtask id = 2
+        taskManager.addSubTask(newSubTask); //subtask id = 3
+        taskManager.addSubTask(newSubTask); //subtask id = 4
+
+        epicSubTasks = taskManager.getEpicSubTasks(newEpicTask.getTaskID());
+        newSubTask = epicSubTasks.getLast();
+        taskManager.removeSubTask(newSubTask.getTaskID()); //removes 4
+
+        taskManager.addSubTask(newSubTask); //subtask id = 5
+
+        epicTasks = taskManager.getEpicTasks();
+        newEpicTask = epicTasks.get(0); //Adding epic task changes task ID
+        assertEquals(newEpicTask.getTaskState(), TaskState.DONE);
+
+        List<SubTask> subTasks = taskManager.getEpicSubTasks(newEpicTask.getTaskID());
+        for (SubTask subTask : subTasks) {
+            assertNotEquals(1, subTask.getTaskID());
+            assertNotEquals(4, subTask.getTaskID());
+        }
+
+        taskManager.removeEpicTask(newEpicTask.getTaskID());
+        epicTasks = taskManager.getEpicTasks();
+        assertNotNull(epicTasks);
+        assertEquals(epicTasks.size(), 0);
+
+    }
+
+    @Test
     void getTaskTypeById() {
         EpicTask newEpicTask = new EpicTask("EpicTask", "EpicDesc");
         taskManager.addEpicTask(newEpicTask);
