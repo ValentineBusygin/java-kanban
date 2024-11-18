@@ -1,9 +1,11 @@
 package ru.yandex.app.model;
 
+import ru.yandex.app.service.TaskToString;
+
 import java.util.ArrayList;
 import java.util.Objects;
 
-public class EpicTask extends Task {
+public class EpicTask extends Task implements TaskToString {
 
     private final ArrayList<Integer> subTaskIds = new ArrayList<>();
 
@@ -54,5 +56,20 @@ public class EpicTask extends Task {
     @Override
     public int hashCode() {
         return Objects.hash(super.hashCode(), subTaskIds);
+    }
+
+    @Override
+    public String taskToString() {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(TaskTypes.EPIC_TASK);
+        sb.append(",");
+        sb.append(taskID);
+        sb.append(",");
+        sb.append(taskName);
+        sb.append(",");
+        sb.append(taskDescription);
+
+        return sb.toString();
     }
 }
