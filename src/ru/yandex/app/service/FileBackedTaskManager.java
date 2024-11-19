@@ -142,7 +142,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
             String taskName = taskElems[2];
             String taskDescription = taskElems[3];
             TaskState taskState = Set.of(TaskTypes.TASK, TaskTypes.SUB_TASK).contains(taskType) ? TaskState.valueOf(taskElems[4]) : null;
-            int taskEpicId = (taskType == TaskTypes.EPIC_TASK) ? Integer.parseInt(taskElems[5]) : null;
+            int taskEpicId = (taskType == TaskTypes.SUB_TASK) ? Integer.parseInt(taskElems[5]) : 0;
             switch (taskType) {
                 case TASK ->
                         tasks.put(taskID, new Task(taskID, taskName, taskDescription, taskState));
