@@ -5,6 +5,7 @@ import ru.yandex.app.model.*;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.Set;
 
 public class FileBackedTaskManager extends InMemoryTaskManager implements TaskManager {
 
@@ -128,7 +129,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
             try {
                 dbFile.createNewFile();
             } catch (IOException e) {
-                //do nothing
+                throw new RuntimeException("Произошла ошибка во время создания пустого файла");
             }
         }
     }
@@ -136,15 +137,28 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
     private void taskFromString(String value) {
         String[] taskElems = value.split(",");
         try {
-            switch (TaskTypes.valueOf(taskElems[0])) {
+            TaskTypes taskType = TaskTypes.valueOf(taskElems[0]);
+            int taskID = Integer.parseInt(taskElems[1]);
+            String taskName = taskElems[2];
+            String taskDescription = taskElems[3];
+            TaskState taskState = Set.of(TaskTypes.TASK, TaskTypes.SUB_TASK).contains(taskType) ? TaskState.valueOf(taskElems[4]) : null;
+            int taskEpicId = (taskType == TaskTypes.EPIC_TASK) ? Integer.parseInt(taskElems[5]) : null;
+            switch (taskType) {
                 case TASK ->
-                        addTask(new Task(Integer.parseInt(taskElems[1]), taskElems[2], taskElems[3], TaskState.valueOf(taskElems[4])));
-                case SUB_TASK ->
-                        addSubTask(new SubTask(Integer.parseInt(taskElems[1]), taskElems[2], taskElems[3], TaskState.valueOf(taskElems[4]), Integer.parseInt(taskElems[5])));
-                case EPIC_TASK -> addEpicTask(new EpicTask(Integer.parseInt(taskElems[1]), taskElems[2], taskElems[3]));
+                        tasks.put(taskID, new Task(taskID, taskName, taskDescription, taskState));
+                case SUB_TASK -> {
+                    subTasks.put(taskID, new SubTask(taskID, taskName, taskDescription, taskState, taskEpicId));
+
+                    EpicTask subTaskEpic = epicTasks.get(taskEpicId);
+                    if (subTaskEpic != null) {
+                        subTaskEpic.addSubTask(taskID);
+                        recalculateEpicStatus(subTaskEpic);
+                    }
+                }
+                case EPIC_TASK -> epicTasks.put(taskID, new EpicTask(taskID, taskName, taskDescription));
             }
         } catch (IllegalArgumentException e) {
-            //do nothing
+            System.out.println(e.getMessage());
         }
     }
 }

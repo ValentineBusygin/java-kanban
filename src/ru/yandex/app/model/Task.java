@@ -1,8 +1,6 @@
 package ru.yandex.app.model;
 
-import ru.yandex.app.service.TaskToString;
-
-public class Task implements TaskToString {
+public class Task {
 
     protected int taskID = -1;
 
@@ -98,11 +96,10 @@ public class Task implements TaskToString {
                 '}';
     }
 
-    @Override
     public String taskToString() {
         StringBuilder sb = new StringBuilder();
 
-        sb.append(TaskTypes.TASK);
+        sb.append(getType());
         sb.append(",");
         sb.append(taskID);
         sb.append(",");
@@ -113,5 +110,9 @@ public class Task implements TaskToString {
         sb.append(taskState);
 
         return sb.toString();
+    }
+
+    protected TaskTypes getType() {
+        return TaskTypes.TASK;
     }
 }

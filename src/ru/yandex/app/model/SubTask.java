@@ -1,10 +1,8 @@
 package ru.yandex.app.model;
 
-import ru.yandex.app.service.TaskToString;
-
 import java.util.Objects;
 
-public class SubTask extends Task implements TaskToString {
+public class SubTask extends Task {
 
     private int epicId;
 
@@ -65,18 +63,15 @@ public class SubTask extends Task implements TaskToString {
     public String taskToString() {
         StringBuilder sb = new StringBuilder();
 
-        sb.append(TaskTypes.SUB_TASK);
-        sb.append(",");
-        sb.append(taskID);
-        sb.append(",");
-        sb.append(taskName);
-        sb.append(",");
-        sb.append(taskDescription);
-        sb.append(",");
-        sb.append(taskState);
+        sb.append(super.taskToString());
         sb.append(",");
         sb.append(epicId);
 
         return sb.toString();
+    }
+
+    @Override
+    protected TaskTypes getType() {
+        return TaskTypes.SUB_TASK;
     }
 }

@@ -1,13 +1,12 @@
 package ru.yandex.app.model;
 
-import ru.yandex.app.service.TaskToString;
-
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
-public class EpicTask extends Task implements TaskToString {
+public class EpicTask extends Task {
 
-    private final ArrayList<Integer> subTaskIds = new ArrayList<>();
+    private final List<Integer> subTaskIds = new ArrayList<>();
 
     public EpicTask(String taskName, String taskDescription) {
         super(taskName, taskDescription, TaskState.NEW);
@@ -29,7 +28,7 @@ public class EpicTask extends Task implements TaskToString {
         subTaskIds.remove(subTaskID);
     }
 
-    public ArrayList<Integer> getSubTaskIds() {
+    public List<Integer> getSubTaskIds() {
         return subTaskIds;
     }
 
@@ -71,5 +70,10 @@ public class EpicTask extends Task implements TaskToString {
         sb.append(taskDescription);
 
         return sb.toString();
+    }
+
+    @Override
+    protected TaskTypes getType() {
+        return TaskTypes.EPIC_TASK;
     }
 }

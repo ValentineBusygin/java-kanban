@@ -12,7 +12,7 @@ public class Main {
 
         Scanner scanner = new Scanner(System.in);
 
-        TaskManager taskManager = (TaskManager) Managers.createTaskManger(TaskManagerTypes.FILE_BACKED_TASK_MANAGER);
+        TaskManager taskManager = Managers.createTaskManger(TaskManagerTypes.FILE_BACKED_TASK_MANAGER);
 
         EpicTask epic1 = new EpicTask("EpicTaskOne", "EpicTaskOneDescription");
         taskManager.addEpicTask(epic1);

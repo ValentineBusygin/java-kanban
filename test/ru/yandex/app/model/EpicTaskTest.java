@@ -3,7 +3,7 @@ package ru.yandex.app.model;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -27,7 +27,7 @@ class EpicTaskTest {
     void cleanSubTasks() {
         epic.addSubTask(10);
         epic.addSubTask(20);
-        ArrayList<Integer> subTaskIds = epic.getSubTaskIds();
+        List<Integer> subTaskIds = epic.getSubTaskIds();
         assertEquals(subTaskIds.size(), 2);
 
         epic.cleanSubTasks();
@@ -38,7 +38,7 @@ class EpicTaskTest {
     @Test
     void removeSubTask() {
         epic.addSubTask(10);
-        ArrayList<Integer> subTaskIds = epic.getSubTaskIds();
+        List<Integer> subTaskIds = epic.getSubTaskIds();
         assertEquals(subTaskIds.size(), 1);
         assertEquals(subTaskIds.getFirst(), 10);
 
@@ -55,7 +55,7 @@ class EpicTaskTest {
     @Test
     void getSubTaskIds() {
         epic.addSubTask(10);
-        ArrayList<Integer> subTaskIds = epic.getSubTaskIds();
+        List<Integer> subTaskIds = epic.getSubTaskIds();
         assertEquals(subTaskIds.size(), 1);
         assertEquals(subTaskIds.getFirst(), 10);
 

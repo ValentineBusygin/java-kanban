@@ -9,13 +9,13 @@ import ru.yandex.app.model.*;
 
 public class InMemoryTaskManager implements TaskManager {
 
-    private final Map<Integer, Task> tasks = new HashMap<>();
-    private final Map<Integer, EpicTask> epicTasks = new HashMap<>();
-    private final Map<Integer, SubTask> subTasks = new HashMap<>();
-
     private final HistoryManager historyManager;
 
     private int nextTaskId = 1;
+
+    protected final Map<Integer, Task> tasks = new HashMap<>();
+    protected final Map<Integer, EpicTask> epicTasks = new HashMap<>();
+    protected final Map<Integer, SubTask> subTasks = new HashMap<>();
 
     public InMemoryTaskManager() {
         historyManager = Managers.getDefaultHistory();
@@ -257,7 +257,7 @@ public class InMemoryTaskManager implements TaskManager {
 
         if (epicTaskId != -1) {
 
-            ArrayList<Integer> epicSubTaskIds = epicTask.getSubTaskIds();
+            List<Integer> epicSubTaskIds = epicTask.getSubTaskIds();
             for (int epicSubTaskId : epicSubTaskIds) {
                 subTasks.remove(epicSubTaskId);
                 historyManager.remove(epicSubTaskId);
@@ -282,7 +282,7 @@ public class InMemoryTaskManager implements TaskManager {
         historyManager.remove(subTaskId);
     }
 
-    private void recalculateEpicStatus(EpicTask epicTask) {
+    protected void recalculateEpicStatus(EpicTask epicTask) {
         List<Integer> subTaskIds = epicTask.getSubTaskIds();
 
         if (subTaskIds.isEmpty()) {
