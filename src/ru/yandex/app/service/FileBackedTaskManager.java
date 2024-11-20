@@ -1,15 +1,17 @@
 package ru.yandex.app.service;
 
+import ru.yandex.app.exceptions.ManagerLoadException;
 import ru.yandex.app.exceptions.ManagerSaveException;
 import ru.yandex.app.model.*;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.Set;
 
-public class FileBackedTaskManager extends InMemoryTaskManager implements TaskManager {
+public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private File dbFile = null;
+
+    private static String DB_FILE_HEADER = "type,id,name,description,status,epic\n";
 
     public FileBackedTaskManager() {
         dbFile = new File("./tmpFile.csv");
@@ -100,7 +102,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
 
     private void save() throws ManagerSaveException {
         try (FileWriter writer = new FileWriter(dbFile, StandardCharsets.UTF_8, false)) {
-            writer.write("type,id,name,description,status,epic\n");
+            writer.write(DB_FILE_HEADER);
             for (Task task : getTasks()) {
                 writer.write(task.taskToString() + "\n");
             }
@@ -129,7 +131,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
             try {
                 dbFile.createNewFile();
             } catch (IOException e) {
-                throw new RuntimeException("Произошла ошибка во время создания пустого файла");
+                throw new ManagerLoadException("Произошла ошибка во время создания пустого файла");
             }
         }
     }
@@ -138,24 +140,28 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
         String[] taskElems = value.split(",");
         try {
             TaskTypes taskType = TaskTypes.valueOf(taskElems[0]);
-            int taskID = Integer.parseInt(taskElems[1]);
+            int taskId = Integer.parseInt(taskElems[1]);
             String taskName = taskElems[2];
             String taskDescription = taskElems[3];
-            TaskState taskState = Set.of(TaskTypes.TASK, TaskTypes.SUB_TASK).contains(taskType) ? TaskState.valueOf(taskElems[4]) : null;
+            TaskState taskState = TaskState.valueOf(taskElems[4]);
             int taskEpicId = (taskType == TaskTypes.SUB_TASK) ? Integer.parseInt(taskElems[5]) : 0;
             switch (taskType) {
                 case TASK ->
-                        tasks.put(taskID, new Task(taskID, taskName, taskDescription, taskState));
+                        tasks.put(taskId, new Task(taskId, taskName, taskDescription, taskState));
                 case SUB_TASK -> {
-                    subTasks.put(taskID, new SubTask(taskID, taskName, taskDescription, taskState, taskEpicId));
+                    subTasks.put(taskId, new SubTask(taskId, taskName, taskDescription, taskState, taskEpicId));
 
                     EpicTask subTaskEpic = epicTasks.get(taskEpicId);
                     if (subTaskEpic != null) {
-                        subTaskEpic.addSubTask(taskID);
+                        subTaskEpic.addSubTask(taskId);
                         recalculateEpicStatus(subTaskEpic);
                     }
                 }
-                case EPIC_TASK -> epicTasks.put(taskID, new EpicTask(taskID, taskName, taskDescription));
+                case EPIC_TASK -> epicTasks.put(taskId, new EpicTask(taskId, taskName, taskDescription));
+            }
+            if (nextTaskId < taskId) {
+                //+1 потому что у нас уже есть таск с указанным ID, а значит возвращать этот же ID некорректно
+                nextTaskId = taskId + 1;
             }
         } catch (IllegalArgumentException e) {
             System.out.println(e.getMessage());

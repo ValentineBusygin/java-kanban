@@ -11,7 +11,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     private final HistoryManager historyManager;
 
-    private int nextTaskId = 1;
+    protected int nextTaskId = 1;
 
     protected final Map<Integer, Task> tasks = new HashMap<>();
     protected final Map<Integer, EpicTask> epicTasks = new HashMap<>();

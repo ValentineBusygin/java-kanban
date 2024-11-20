@@ -59,17 +59,7 @@ public class EpicTask extends Task {
 
     @Override
     public String taskToString() {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append(TaskTypes.EPIC_TASK);
-        sb.append(",");
-        sb.append(taskID);
-        sb.append(",");
-        sb.append(taskName);
-        sb.append(",");
-        sb.append(taskDescription);
-
-        return sb.toString();
+        return super.taskToString();
     }
 
     @Override
