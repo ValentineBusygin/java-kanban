@@ -58,4 +58,20 @@ public class SubTask extends Task {
     public int hashCode() {
         return Objects.hash(super.hashCode(), epicId);
     }
+
+    @Override
+    public String taskToString() {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(super.taskToString());
+        sb.append(",");
+        sb.append(epicId);
+
+        return sb.toString();
+    }
+
+    @Override
+    protected TaskTypes getType() {
+        return TaskTypes.SUB_TASK;
+    }
 }

@@ -1,11 +1,12 @@
 package ru.yandex.app.model;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class EpicTask extends Task {
 
-    private final ArrayList<Integer> subTaskIds = new ArrayList<>();
+    private final List<Integer> subTaskIds = new ArrayList<>();
 
     public EpicTask(String taskName, String taskDescription) {
         super(taskName, taskDescription, TaskState.NEW);
@@ -27,7 +28,7 @@ public class EpicTask extends Task {
         subTaskIds.remove(subTaskID);
     }
 
-    public ArrayList<Integer> getSubTaskIds() {
+    public List<Integer> getSubTaskIds() {
         return subTaskIds;
     }
 
@@ -54,5 +55,15 @@ public class EpicTask extends Task {
     @Override
     public int hashCode() {
         return Objects.hash(super.hashCode(), subTaskIds);
+    }
+
+    @Override
+    public String taskToString() {
+        return super.taskToString();
+    }
+
+    @Override
+    protected TaskTypes getType() {
+        return TaskTypes.EPIC_TASK;
     }
 }

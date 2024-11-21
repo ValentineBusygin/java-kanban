@@ -12,6 +12,8 @@ public class Managers {
         switch (taskManagerType) {
             case IN_MEMORY_TASK_MANAGER:
                 return new InMemoryTaskManager();
+            case FILE_BACKED_TASK_MANAGER:
+                return new FileBackedTaskManager("./tst.csv");
             default:
                 return getDefault();
         }

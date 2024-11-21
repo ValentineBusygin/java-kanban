@@ -95,4 +95,24 @@ public class Task {
                 ", taskState=" + taskState +
                 '}';
     }
+
+    public String taskToString() {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(getType());
+        sb.append(",");
+        sb.append(taskID);
+        sb.append(",");
+        sb.append(taskName);
+        sb.append(",");
+        sb.append(taskDescription);
+        sb.append(",");
+        sb.append(taskState);
+
+        return sb.toString();
+    }
+
+    protected TaskTypes getType() {
+        return TaskTypes.TASK;
+    }
 }
