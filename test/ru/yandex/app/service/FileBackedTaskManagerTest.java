@@ -1,6 +1,5 @@
 package ru.yandex.app.service;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.yandex.app.model.*;
@@ -11,13 +10,13 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class FileBackedTaskManagerTest {
+class FileBackedTaskManagerTest  extends TaskManagerTest<FileBackedTaskManager> {
 
-    TaskManager taskManager;
     File tmpFile;
 
-    @Test
-    void testEmptyLoad() {
+    @BeforeEach
+    @Override
+    public void initTest() {
         try {
             tmpFile = File.createTempFile("tmpFile", ".csv");
         } catch (IOException e) {
@@ -25,22 +24,17 @@ class FileBackedTaskManagerTest {
         }
 
         taskManager = new FileBackedTaskManager(tmpFile);
+    }
 
-        assertEquals(0,taskManager.getEpicTasks().size(),  "Массив эпиков не пустой для пустого файла");
-        assertEquals(0,taskManager.getTasks().size(), "Массив тасков не пустой для пустого файла");
-        assertEquals(0,taskManager.getSubTasks().size(), "Массив сабтасков не пустой для пустого файла");
+    @Test
+    void testEmptyLoad() {
+        assertEquals(0, taskManager.getEpicTasks().size(),  "Массив эпиков не пустой для пустого файла");
+        assertEquals(0, taskManager.getTasks().size(), "Массив тасков не пустой для пустого файла");
+        assertEquals(0, taskManager.getSubTasks().size(), "Массив сабтасков не пустой для пустого файла");
     }
 
     @Test
     void testEmptySaveLoad() {
-        try {
-            tmpFile = File.createTempFile("tmpFile", ".csv");
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        }
-
-        taskManager = new FileBackedTaskManager(tmpFile);
-
         List<EpicTask> epicTasks = taskManager.getEpicTasks();
         assertNotNull(epicTasks);
         assertEquals(0, epicTasks.size(), "Массив эпиков не пустой после инициализации");
@@ -56,23 +50,15 @@ class FileBackedTaskManagerTest {
         assertNotNull(epicTasks);
         assertEquals(0, epicTasks.size(), "Массив эпиков не пустой после удаления единственного элемента");
 
-        taskManager = new FileBackedTaskManager(tmpFile);
+        FileBackedTaskManager taskManagerForRead = new FileBackedTaskManager(tmpFile);
 
-        epicTasks = taskManager.getEpicTasks();
+        epicTasks = taskManagerForRead.getEpicTasks();
         assertNotNull(epicTasks);
         assertEquals(0, epicTasks.size(), "Массив эпиков не пустой после загрузки пустого файла");
     }
 
     @Test
     void testUnEmptySaveLoad() {
-        try {
-            tmpFile = File.createTempFile("tmpFile", ".csv");
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        }
-
-        taskManager = new FileBackedTaskManager(tmpFile);
-
         List<EpicTask> epicTasks = taskManager.getEpicTasks();
         assertNotNull(epicTasks);
         assertEquals(0, epicTasks.size(), "Массив эпиков не пустой после инициализации");
@@ -89,17 +75,17 @@ class FileBackedTaskManagerTest {
         Task newTask = new Task("Task");
         taskManager.addTask(newTask);
 
-        taskManager = new FileBackedTaskManager(tmpFile);
+        FileBackedTaskManager taskManagerForRead = new FileBackedTaskManager(tmpFile);
 
-        epicTasks = taskManager.getEpicTasks();
+        epicTasks = taskManagerForRead.getEpicTasks();
         assertNotNull(epicTasks);
         assertEquals(1, epicTasks.size(), "Массив эпиков не пустой после загрузки не пустого файла");
 
-        List<SubTask> subTasks = taskManager.getSubTasks();
+        List<SubTask> subTasks = taskManagerForRead.getSubTasks();
         assertNotNull(subTasks);
         assertEquals(1, subTasks.size(), "Массив сабтасков не пустой после загрузки не пустого файла");
 
-        List<Task> tasks = taskManager.getTasks();
+        List<Task> tasks = taskManagerForRead.getTasks();
         assertNotNull(tasks);
         assertEquals(1, tasks.size(), "Массив тасков не пустой после загрузки не пустого файла");
 

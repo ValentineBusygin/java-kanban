@@ -9,14 +9,11 @@ public class Managers {
     }
 
     public static TaskManager createTaskManger(TaskManagerTypes taskManagerType) {
-        switch (taskManagerType) {
-            case IN_MEMORY_TASK_MANAGER:
-                return new InMemoryTaskManager();
-            case FILE_BACKED_TASK_MANAGER:
-                return new FileBackedTaskManager("./tst.csv");
-            default:
-                return getDefault();
-        }
+        return switch (taskManagerType) {
+            case IN_MEMORY_TASK_MANAGER -> new InMemoryTaskManager();
+            case FILE_BACKED_TASK_MANAGER -> new FileBackedTaskManager("./tst.csv");
+            default -> getDefault();
+        };
     }
 
     public static TaskManager getDefault() {

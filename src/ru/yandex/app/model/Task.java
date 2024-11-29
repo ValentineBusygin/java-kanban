@@ -1,6 +1,10 @@
 package ru.yandex.app.model;
 
-public class Task {
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+public class Task implements Comparable<Task> {
 
     protected int taskID = -1;
 
@@ -9,6 +13,10 @@ public class Task {
     protected String taskDescription;
 
     protected TaskState taskState = TaskState.NEW; //По умолчанию всегда инициализируем NEW
+
+    protected LocalDateTime startTime;
+
+    protected Duration duration;
 
     public Task(String taskName) {
         this.taskName = taskName;
@@ -36,6 +44,23 @@ public class Task {
         this.taskName = taskName;
         this.taskState = taskState;
         this.taskDescription = taskDescription;
+    }
+
+    public Task(int taskID, String taskName, String taskDescription, TaskState taskState, LocalDateTime startTime, Duration duration) {
+        this.taskID = taskID;
+        this.taskName = taskName;
+        this.taskDescription = taskDescription;
+        this.taskState = taskState;
+        this.startTime = startTime;
+        this.duration = duration;
+    }
+
+    public Task(String taskName, String taskDescription, TaskState taskState, LocalDateTime startTime, Duration duration) {
+        this.taskName = taskName;
+        this.taskDescription = taskDescription;
+        this.taskState = taskState;
+        this.startTime = startTime;
+        this.duration = duration;
     }
 
     public void setTaskID(int taskID) {
@@ -70,6 +95,22 @@ public class Task {
         this.taskDescription = taskDescription;
     }
 
+    public Duration getDuration() {
+        return duration;
+    }
+
+    public void setDuration(Duration duration) {
+        this.duration = duration;
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -96,6 +137,11 @@ public class Task {
                 '}';
     }
 
+    @Override
+    public int compareTo(Task task) {
+        return startTime.compareTo(task.getStartTime());
+    }
+
     public String taskToString() {
         StringBuilder sb = new StringBuilder();
 
@@ -108,9 +154,17 @@ public class Task {
         sb.append(taskDescription);
         sb.append(",");
         sb.append(taskState);
+        sb.append(",");
+        sb.append(startTime == null ? " " : startTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")));
+        sb.append(",");
+        sb.append(duration == null ? " " : duration.toMinutes());
 
         return sb.toString();
     }
+
+    public LocalDateTime getEndTime() {
+        return startTime == null || duration == null ? null : startTime.plus(duration);
+    };
 
     protected TaskTypes getType() {
         return TaskTypes.TASK;

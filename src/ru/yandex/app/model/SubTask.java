@@ -1,5 +1,7 @@
 package ru.yandex.app.model;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class SubTask extends Task {
@@ -23,6 +25,11 @@ public class SubTask extends Task {
 
     public SubTask(int taskId, String taskName, String taskDescription, TaskState taskState, int epicId) {
         super(taskId, taskName, taskDescription, taskState);
+        this.epicId = epicId;
+    }
+
+    public SubTask(int taskID, String taskName, String taskDescription, TaskState taskState, LocalDateTime startTime, Duration duration, int epicId) {
+        super(taskID, taskName, taskDescription, taskState, startTime, duration);
         this.epicId = epicId;
     }
 
