@@ -164,7 +164,7 @@ public class Task implements Comparable<Task> {
 
     public LocalDateTime getEndTime() {
         return startTime == null || duration == null ? null : startTime.plus(duration);
-    };
+    }
 
     protected TaskTypes getType() {
         return TaskTypes.TASK;
