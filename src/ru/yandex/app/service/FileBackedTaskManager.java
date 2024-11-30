@@ -6,12 +6,15 @@ import ru.yandex.app.model.*;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private File dbFile = null;
 
-    private static String DB_FILE_HEADER = "type,id,name,description,status,epic\n";
+    private static final String DB_FILE_HEADER = "type,id,name,description,status,startdate,duration,epic\n";
 
     public FileBackedTaskManager() {
         dbFile = new File("./tmpFile.csv");
@@ -144,17 +147,20 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             String taskName = taskElems[2];
             String taskDescription = taskElems[3];
             TaskState taskState = TaskState.valueOf(taskElems[4]);
-            int taskEpicId = (taskType == TaskTypes.SUB_TASK) ? Integer.parseInt(taskElems[5]) : 0;
+            LocalDateTime taskStartTime = taskElems[5].isBlank() ? null : LocalDateTime.parse(taskElems[5], DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"));
+            Duration taskDuration = taskElems[6].isBlank() ? null : Duration.ofMinutes(Integer.parseInt(taskElems[6]));
+            int taskEpicId = (taskType == TaskTypes.SUB_TASK) ? Integer.parseInt(taskElems[7]) : 0;
             switch (taskType) {
                 case TASK ->
-                        tasks.put(taskId, new Task(taskId, taskName, taskDescription, taskState));
+                        tasks.put(taskId, new Task(taskId, taskName, taskDescription, taskState, taskStartTime, taskDuration));
                 case SUB_TASK -> {
-                    subTasks.put(taskId, new SubTask(taskId, taskName, taskDescription, taskState, taskEpicId));
+                    subTasks.put(taskId, new SubTask(taskId, taskName, taskDescription, taskState, taskStartTime, taskDuration, taskEpicId));
 
                     EpicTask subTaskEpic = epicTasks.get(taskEpicId);
                     if (subTaskEpic != null) {
                         subTaskEpic.addSubTask(taskId);
                         recalculateEpicStatus(subTaskEpic);
+                        recalculateEpicEndTimeAndDuration(subTaskEpic);
                     }
                 }
                 case EPIC_TASK -> epicTasks.put(taskId, new EpicTask(taskId, taskName, taskDescription));

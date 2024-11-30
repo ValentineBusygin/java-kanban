@@ -1,5 +1,9 @@
 package ru.yandex.app.model;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 public class Task {
 
     protected int taskID = -1;
@@ -9,6 +13,10 @@ public class Task {
     protected String taskDescription;
 
     protected TaskState taskState = TaskState.NEW; //По умолчанию всегда инициализируем NEW
+
+    protected LocalDateTime startTime;
+
+    protected Duration duration;
 
     public Task(String taskName) {
         this.taskName = taskName;
@@ -36,6 +44,23 @@ public class Task {
         this.taskName = taskName;
         this.taskState = taskState;
         this.taskDescription = taskDescription;
+    }
+
+    public Task(int taskID, String taskName, String taskDescription, TaskState taskState, LocalDateTime startTime, Duration duration) {
+        this.taskID = taskID;
+        this.taskName = taskName;
+        this.taskDescription = taskDescription;
+        this.taskState = taskState;
+        this.startTime = startTime;
+        this.duration = duration;
+    }
+
+    public Task(String taskName, String taskDescription, TaskState taskState, LocalDateTime startTime, Duration duration) {
+        this.taskName = taskName;
+        this.taskDescription = taskDescription;
+        this.taskState = taskState;
+        this.startTime = startTime;
+        this.duration = duration;
     }
 
     public void setTaskID(int taskID) {
@@ -68,6 +93,22 @@ public class Task {
 
     public void setTaskDescription(String taskDescription) {
         this.taskDescription = taskDescription;
+    }
+
+    public Duration getDuration() {
+        return duration;
+    }
+
+    public void setDuration(Duration duration) {
+        this.duration = duration;
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
     }
 
     @Override
@@ -108,8 +149,16 @@ public class Task {
         sb.append(taskDescription);
         sb.append(",");
         sb.append(taskState);
+        sb.append(",");
+        sb.append(startTime == null ? " " : startTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")));
+        sb.append(",");
+        sb.append(duration == null ? " " : duration.toMinutes());
 
         return sb.toString();
+    }
+
+    public LocalDateTime getEndTime() {
+        return startTime == null || duration == null ? null : startTime.plus(duration);
     }
 
     protected TaskTypes getType() {

@@ -1,10 +1,11 @@
 package ru.yandex.app.service;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.*;
 
+import ru.yandex.app.exceptions.TaskAddingException;
 import ru.yandex.app.model.*;
 
 public class InMemoryTaskManager implements TaskManager {
@@ -17,16 +18,24 @@ public class InMemoryTaskManager implements TaskManager {
     protected final Map<Integer, EpicTask> epicTasks = new HashMap<>();
     protected final Map<Integer, SubTask> subTasks = new HashMap<>();
 
+    protected final Set<Task> sortedByPriorityTasks = new TreeSet<>(Comparator.comparing(Task::getStartTime));
+
     public InMemoryTaskManager() {
         historyManager = Managers.getDefaultHistory();
     }
 
     @Override
-    public void addTask(Task task) {
+    public void addTask(Task task) throws TaskAddingException {
+        isTaskCrossedExisting(tasks, task); //При наличии пересечения - пробрасываем исключение выше
+
         int taskId = getNextTaskId();
         task.setTaskID(taskId);
 
         tasks.put(taskId, task);
+
+        if (task.getStartTime() != null) {
+            sortedByPriorityTasks.add(task);
+        }
     }
 
     @Override
@@ -36,8 +45,8 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void removeTask(int taskID) {
-        tasks.remove(taskID);
-        historyManager.remove(taskID);
+        Task task = tasks.get(taskID);
+        removeTask(task);
     }
 
     @Override
@@ -55,16 +64,12 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public List<SubTask> getEpicSubTasks(int epicTaskId) {
-        List<SubTask> epicSubTasks = new ArrayList<>();
-
-        EpicTask epicTask = epicTasks.get(epicTaskId);
-        if (epicTask != null) {
-            for (int epicSubTaskId : epicTask.getSubTaskIds()) {
-                epicSubTasks.add(subTasks.get(epicSubTaskId));
-            }
-        }
-
-        return epicSubTasks;
+        return Optional.ofNullable(epicTasks.get(epicTaskId))
+                .map(EpicTask::getSubTaskIds)
+                .orElse(List.of())
+                .stream()
+                .map(subTasks::get)
+                .toList();
     }
 
     @Override
@@ -86,7 +91,9 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public void addSubTask(SubTask subTask) {
+    public void addSubTask(SubTask subTask) throws TaskAddingException {
+        isTaskCrossedExisting(tasks, subTask); //При наличии пересечения - пробрасываем исключение выше
+
         int subTaskId = getNextTaskId();
         subTask.setTaskID(subTaskId);
 
@@ -96,6 +103,11 @@ public class InMemoryTaskManager implements TaskManager {
         if (subTaskEpic != null) {
             subTaskEpic.addSubTask(subTaskId);
             recalculateEpicStatus(subTaskEpic);
+            recalculateEpicEndTimeAndDuration(subTaskEpic);
+        }
+
+        if (subTask.getStartTime() != null) {
+            sortedByPriorityTasks.add(subTask);
         }
     }
 
@@ -198,6 +210,9 @@ public class InMemoryTaskManager implements TaskManager {
             }
 
             tasks.replace(taskId, newTask);
+
+            sortedByPriorityTasks.remove(oldTask);
+            sortedByPriorityTasks.add(newTask);
         }
     }
 
@@ -217,6 +232,7 @@ public class InMemoryTaskManager implements TaskManager {
         oldEpicTask.setTaskDescription(newEpicTask.getTaskDescription());
 
         recalculateEpicStatus(oldEpicTask);
+        recalculateEpicEndTimeAndDuration(oldEpicTask);
     }
 
     @Override
@@ -234,12 +250,18 @@ public class InMemoryTaskManager implements TaskManager {
                 EpicTask oldSubTaskEpic = epicTasks.get(oldSubTask.getEpicId());
                 oldSubTaskEpic.removeSubTask(subTaskId);
                 recalculateEpicStatus(oldSubTaskEpic);
+                recalculateEpicEndTimeAndDuration(oldSubTaskEpic);
+
                 EpicTask newSubTaskEpic = epicTasks.get(newSubTask.getEpicId());
                 newSubTaskEpic.addSubTask(subTaskId);
                 recalculateEpicStatus(newSubTaskEpic);
+                recalculateEpicEndTimeAndDuration(newSubTaskEpic);
             }
 
             subTasks.replace(subTaskId, newSubTask);
+
+            sortedByPriorityTasks.remove(oldSubTask);
+            sortedByPriorityTasks.add(newSubTask);
         }
     }
 
@@ -248,8 +270,23 @@ public class InMemoryTaskManager implements TaskManager {
         return historyManager.getHistory();
     }
 
+    public Set<Task> getPrioritizedTasks() {
+        return sortedByPriorityTasks;
+    }
+
     private int getNextTaskId() {
         return nextTaskId++;
+    }
+
+    private void removeTask(Task task) {
+        if (task != null) {
+            int taskId = task.getTaskID();
+
+            tasks.remove(taskId);
+            historyManager.remove(taskId);
+
+            sortedByPriorityTasks.remove(task);
+        }
     }
 
     private void removeEpicTask(EpicTask epicTask) {
@@ -276,10 +313,12 @@ public class InMemoryTaskManager implements TaskManager {
         if (subTaskEpicTask != null) {
             subTaskEpicTask.removeSubTask(subTaskId);
             recalculateEpicStatus(subTaskEpicTask);
+            recalculateEpicEndTimeAndDuration(subTaskEpicTask);
         }
 
         subTasks.remove(subTaskId);
         historyManager.remove(subTaskId);
+        sortedByPriorityTasks.remove(subTask);
     }
 
     protected void recalculateEpicStatus(EpicTask epicTask) {
@@ -317,4 +356,89 @@ public class InMemoryTaskManager implements TaskManager {
         }
     }
 
+    protected void recalculateEpicEndTimeAndDuration(EpicTask epicTask) {
+        List<Integer> subTaskIds = epicTask.getSubTaskIds();
+
+        if (subTaskIds.isEmpty()) {
+            epicTask.setEndTime(null);
+            return;
+        }
+
+        LocalDateTime endTime = null;
+        LocalDateTime startTime = null;
+
+        for (int subTaskId : subTaskIds) {
+            SubTask subTask = subTasks.get(subTaskId);
+
+            LocalDateTime subTaskEndTime = subTask.getEndTime();
+            if (subTaskEndTime != null) {
+                if (endTime == null) {
+                    endTime = subTaskEndTime;
+                } else if (endTime.isBefore(subTaskEndTime)) {
+                    endTime = subTaskEndTime;
+                }
+            }
+
+            LocalDateTime subTaskStartTime = subTask.getStartTime();
+            if (subTaskStartTime != null) {
+                if (startTime == null) {
+                    startTime = subTaskStartTime;
+                } else if (startTime.isAfter(subTaskStartTime)) {
+                    startTime = subTaskStartTime;
+                }
+            }
+        }
+
+        epicTask.setEndTime(endTime);
+        epicTask.setStartTime(startTime);
+
+        if (startTime != null && endTime != null) {
+            epicTask.setDuration(Duration.between(startTime, endTime));
+        }
+    }
+
+    protected void isTaskCrossedExisting(Map<Integer, ? extends Task> tasks, Task task) {
+        Optional<Integer> foundCrossingTask = tasks.entrySet().stream()
+                .filter(existTask -> checkTasksForCrossing(existTask.getValue(), task))
+                .map(Map.Entry::getKey)
+                .findFirst();
+
+        if (foundCrossingTask.isPresent()) {
+            throw new TaskAddingException("Time already taken");
+        }
+
+    }
+
+    protected boolean checkTasksForCrossing(Task taskOne, Task taskTwo) {
+        Long oneStartTime;
+        try {
+            oneStartTime = taskOne.getStartTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        } catch (NullPointerException e) {
+            oneStartTime = null;
+        }
+
+        Long oneEndTime;
+        try {
+            oneEndTime = taskOne.getEndTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        } catch (NullPointerException e) {
+            oneEndTime = null;
+        }
+
+        Long twoStartTime;
+        try {
+            twoStartTime = taskTwo.getStartTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        } catch (NullPointerException e) {
+            twoStartTime = null;
+        }
+
+        Long twoEndTime;
+        try {
+            twoEndTime = taskTwo.getEndTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        } catch (NullPointerException e) {
+            twoEndTime = null;
+        }
+
+        return oneStartTime != null && oneEndTime != null && twoStartTime != null && twoEndTime != null
+                && Math.min(oneEndTime, twoEndTime) - Math.max(oneStartTime, twoStartTime) > 0;
+    }
 }
