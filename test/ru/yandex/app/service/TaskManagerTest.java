@@ -26,7 +26,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         assertEquals(0 , tasks.size(), "Ожидался пустой массив задач");
 
         Task newTask = new Task("Task");
-        taskManager.addTask(newTask);
+        assertDoesNotThrow(() -> {taskManager.addTask(newTask);}, "При добавлении таска без даты не должно быть выброшено исключение");
         tasks = taskManager.getTasks();
         assertNotNull(tasks);
         assertEquals(1 , tasks.size(), "Ожидался массив задач с 1 элементом");
@@ -54,8 +54,8 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
         SubTask newSubTaskOne = new SubTask("SubTask", "SubTaskDesc", TaskState.IN_PROGRESS, newEpicTask.getTaskID());
         SubTask newSubTaskTwo = new SubTask("SubTask", "SubTaskDesc", TaskState.IN_PROGRESS, newEpicTask.getTaskID());
-        taskManager.addSubTask(newSubTaskOne);
-        taskManager.addSubTask(newSubTaskTwo);
+        assertDoesNotThrow(() -> {taskManager.addSubTask(newSubTaskOne);}, "При добавлении сабтаска без даты не должно быть выброшено исключение");
+        assertDoesNotThrow(() -> {taskManager.addSubTask(newSubTaskTwo);}, "При добавлении сабтаска без даты не должно быть выброшено исключение");
         List<SubTask> epicSubTasks = taskManager.getEpicSubTasks(newEpicTask.getTaskID());
         assertNotNull(epicSubTasks);
         assertEquals(2, epicSubTasks.size(), "Ожидался массив с 2 подзадачами");
@@ -73,9 +73,9 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         assertEquals(TaskState.NEW, newEpicTask.getTaskState(), "У эпика ожидался статус NEW");
 
         newSubTaskOne.setTaskState(TaskState.DONE);
-        newSubTaskTwo.setTaskState(TaskState.DONE);
-        taskManager.addSubTask(newSubTaskOne);
-        taskManager.addSubTask(newSubTaskTwo);
+        newSubTaskTwo.setTaskState(TaskState.DONE);;
+        assertDoesNotThrow(() -> {taskManager.addSubTask(newSubTaskOne);}, "При добавлении сабтаска без даты не должно быть выброшено исключение");
+        assertDoesNotThrow(() -> {taskManager.addSubTask(newSubTaskTwo);}, "При добавлении сабтаска без даты не должно быть выброшено исключение");
 
         epicTasks = taskManager.getEpicTasks();
         newEpicTask = epicTasks.get(0); //Adding epic task changes task ID
@@ -83,7 +83,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
         taskManager.removeSubTask(newSubTaskTwo.getTaskID());
         newSubTaskTwo.setTaskState(TaskState.IN_PROGRESS);
-        taskManager.addSubTask(newSubTaskTwo);
+        assertDoesNotThrow(() -> {taskManager.addSubTask(newSubTaskTwo);}, "При добавлении сабтаска без даты не должно быть выброшено исключение");
 
         epicTasks = taskManager.getEpicTasks();
         newEpicTask = epicTasks.get(0); //Adding epic task changes task ID
@@ -91,7 +91,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
         taskManager.removeSubTask(newSubTaskTwo.getTaskID());
         newSubTaskTwo.setTaskState(TaskState.NEW);
-        taskManager.addSubTask(newSubTaskTwo);
+        assertDoesNotThrow(() -> {taskManager.addSubTask(newSubTaskTwo);}, "При добавлении сабтаска без даты не должно быть выброшено исключение");
 
         epicTasks = taskManager.getEpicTasks();
         newEpicTask = epicTasks.get(0); //Adding epic task changes task ID
@@ -116,7 +116,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         assertEquals(1, epicTasks.size(), "Ожидался массив с 1 эпиком");
 
         SubTask newSubTask = new SubTask("SubTask", "SubTaskDesc", newEpicTask.getTaskID());
-        taskManager.addSubTask(newSubTask);
+        assertDoesNotThrow(() -> {taskManager.addSubTask(newSubTask);}, "При добавлении сабтаска без даты не должно быть выброшено исключение");
         List<SubTask> subTasks = taskManager.getSubTasks();
         assertNotNull(subTasks);
         assertEquals(1, subTasks.size(), "Ожидался массив с 1 подзадачей");
@@ -227,11 +227,31 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
     @Test
     void checkIntervals() {
-        Task newTask = new Task("Task", "TaskDesc", TaskState.NEW, LocalDateTime.now(), Duration.ofMinutes(30));
+
+        LocalDateTime now = LocalDateTime.now();
+        //Четкое совпадение начала и конца
+        Task newTask = new Task("Task", "TaskDesc", TaskState.NEW, now, Duration.ofMinutes(30));
         taskManager.addTask(newTask);
         assertThrows(TaskAddingException.class, () -> {taskManager.addTask(newTask);}, "При пересечении задач должно быть выброшено исключение");
 
-        Task newTaskTwo = new Task("Task", "TaskDesc", TaskState.NEW, LocalDateTime.now().plusDays(1), Duration.ofMinutes(30));
-        assertDoesNotThrow(() -> {taskManager.addTask(newTaskTwo);}, "При непересечении задач не должно быть выброшено исключение");
+        //Конец нового таска попадает в существующий
+        Task newTaskTwo = new Task("Task", "TaskDesc", TaskState.NEW, now.minusMinutes(10), Duration.ofMinutes(30));
+        assertThrows(TaskAddingException.class, () -> {taskManager.addTask(newTaskTwo);}, "При пересечении задач должно быть выброшено исключение: Конец нового таска попадает в существующий");
+
+        //Начало нового таска попадает в существующий
+        Task newTaskThree = new Task("Task", "TaskDesc", TaskState.NEW, now.plusMinutes(10), Duration.ofMinutes(30));
+        assertThrows(TaskAddingException.class, () -> {taskManager.addTask(newTaskThree);}, "При пересечении задач должно быть выброшено исключение: Начало нового таска попадает в существующий");;
+
+        //Новый таск целиком внутри существующего
+        Task newTaskFour = new Task("Task", "TaskDesc", TaskState.NEW, now.plusMinutes(10), Duration.ofMinutes(10));
+        assertThrows(TaskAddingException.class, () -> {taskManager.addTask(newTaskFour);}, "При пересечении задач должно быть выброшено исключение: Новый таск целиком внутри существующего");
+
+        //Новый таск вокруг существующего
+        Task newTaskFive = new Task("Task", "TaskDesc", TaskState.NEW, now.minusMinutes(10), Duration.ofMinutes(50));
+        assertThrows(TaskAddingException.class, () -> {taskManager.addTask(newTaskFive);}, "При пересечении задач должно быть выброшено исключение: Новый таск вокруг существующего");
+
+        //Не пересекающийся таск
+        Task newTaskSix = new Task("Task", "TaskDesc", TaskState.NEW, now.plusDays(1), Duration.ofMinutes(30));
+        assertDoesNotThrow(() -> {taskManager.addTask(newTaskSix);}, "При непересечении задач не должно быть выброшено исключение: ");
     }
 }

@@ -4,7 +4,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class Task implements Comparable<Task> {
+public class Task {
 
     protected int taskID = -1;
 
@@ -135,11 +135,6 @@ public class Task implements Comparable<Task> {
                 ", taskDescription='" + taskDescription + '\'' +
                 ", taskState=" + taskState +
                 '}';
-    }
-
-    @Override
-    public int compareTo(Task task) {
-        return startTime.compareTo(task.getStartTime());
     }
 
     public String taskToString() {

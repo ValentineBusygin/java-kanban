@@ -18,22 +18,15 @@ public class InMemoryTaskManager implements TaskManager {
     protected final Map<Integer, EpicTask> epicTasks = new HashMap<>();
     protected final Map<Integer, SubTask> subTasks = new HashMap<>();
 
-    protected final Set<Task> sortedByPriorityTasks = new TreeSet<>();
+    protected final Set<Task> sortedByPriorityTasks = new TreeSet<>(Comparator.comparing(Task::getStartTime));
 
     public InMemoryTaskManager() {
         historyManager = Managers.getDefaultHistory();
     }
 
     @Override
-    public void addTask(Task task) {
-        Optional<Integer> foundCrossingTask = tasks.entrySet().stream()
-               .filter(existTask -> checkTasksForCrossing(existTask.getValue(), task))
-               .map(Map.Entry::getKey)
-               .findFirst();
-
-        if (foundCrossingTask.isPresent()) {
-            throw new TaskAddingException("Time already taken");
-        }
+    public void addTask(Task task) throws TaskAddingException {
+        isTaskCrossedExisting(tasks, task); //При наличии пересечения - пробрасываем исключение выше
 
         int taskId = getNextTaskId();
         task.setTaskID(taskId);
@@ -52,8 +45,8 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void removeTask(int taskID) {
-        tasks.remove(taskID);
-        historyManager.remove(taskID);
+        Task task = tasks.get(taskID);
+        removeTask(task);
     }
 
     @Override
@@ -71,7 +64,10 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public List<SubTask> getEpicSubTasks(int epicTaskId) {
-        return epicTasks.get(epicTaskId).getSubTaskIds().stream()
+        return Optional.ofNullable(epicTasks.get(epicTaskId))
+                .map(EpicTask::getSubTaskIds)
+                .orElse(List.of())
+                .stream()
                 .map(subTasks::get)
                 .toList();
     }
@@ -95,15 +91,8 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public void addSubTask(SubTask subTask) {
-        Optional<Integer> foundCrossingTask = subTasks.entrySet().stream()
-                .filter(existTask -> checkTasksForCrossing(existTask.getValue(), subTask))
-                .map(Map.Entry::getKey)
-                .findFirst();
-
-        if (foundCrossingTask.isPresent()) {
-            throw new TaskAddingException("Time already taken");
-        }
+    public void addSubTask(SubTask subTask) throws TaskAddingException {
+        isTaskCrossedExisting(tasks, subTask); //При наличии пересечения - пробрасываем исключение выше
 
         int subTaskId = getNextTaskId();
         subTask.setTaskID(subTaskId);
@@ -221,6 +210,9 @@ public class InMemoryTaskManager implements TaskManager {
             }
 
             tasks.replace(taskId, newTask);
+
+            sortedByPriorityTasks.remove(oldTask);
+            sortedByPriorityTasks.add(newTask);
         }
     }
 
@@ -267,6 +259,9 @@ public class InMemoryTaskManager implements TaskManager {
             }
 
             subTasks.replace(subTaskId, newSubTask);
+
+            sortedByPriorityTasks.remove(oldSubTask);
+            sortedByPriorityTasks.add(newSubTask);
         }
     }
 
@@ -275,12 +270,23 @@ public class InMemoryTaskManager implements TaskManager {
         return historyManager.getHistory();
     }
 
-    public List<Task> getPrioritizedTasks() {
-        return null;
+    public Set<Task> getPrioritizedTasks() {
+        return sortedByPriorityTasks;
     }
 
     private int getNextTaskId() {
         return nextTaskId++;
+    }
+
+    private void removeTask(Task task) {
+        if (task != null) {
+            int taskId = task.getTaskID();
+
+            tasks.remove(taskId);
+            historyManager.remove(taskId);
+
+            sortedByPriorityTasks.remove(task);
+        }
     }
 
     private void removeEpicTask(EpicTask epicTask) {
@@ -312,6 +318,7 @@ public class InMemoryTaskManager implements TaskManager {
 
         subTasks.remove(subTaskId);
         historyManager.remove(subTaskId);
+        sortedByPriorityTasks.remove(subTask);
     }
 
     protected void recalculateEpicStatus(EpicTask epicTask) {
@@ -388,6 +395,18 @@ public class InMemoryTaskManager implements TaskManager {
         if (startTime != null && endTime != null) {
             epicTask.setDuration(Duration.between(startTime, endTime));
         }
+    }
+
+    protected void isTaskCrossedExisting(Map<Integer, ? extends Task> tasks, Task task) {
+        Optional<Integer> foundCrossingTask = tasks.entrySet().stream()
+                .filter(existTask -> checkTasksForCrossing(existTask.getValue(), task))
+                .map(Map.Entry::getKey)
+                .findFirst();
+
+        if (foundCrossingTask.isPresent()) {
+            throw new TaskAddingException("Time already taken");
+        }
+
     }
 
     protected boolean checkTasksForCrossing(Task taskOne, Task taskTwo) {
