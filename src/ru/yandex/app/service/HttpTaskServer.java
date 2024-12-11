@@ -126,7 +126,7 @@ public class HttpTaskServer {
 
         protected final TaskManager taskManager;
 
-        enum Endpoint {GET, GET_ALL, GET_SUBTASKS, CREATE_OR_UPDATE, DELETE, UNKNOWN}
+        enum Endpoint { GET, GET_ALL, GET_SUBTASKS, CREATE_OR_UPDATE, DELETE, UNKNOWN }
 
         public BaseHandler(TaskManager taskManager) {
             this.taskManager = taskManager;
