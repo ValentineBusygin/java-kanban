@@ -3,6 +3,7 @@ package ru.yandex.app.service;
 import ru.yandex.app.model.*;
 
 import java.util.List;
+import java.util.Set;
 
 public interface TaskManager {
     void addTask(Task task);
@@ -52,4 +53,6 @@ public interface TaskManager {
     void updateSubTask(SubTask newSubTask);
 
     List<Task> getHistory();
+
+    Set<Task> getPrioritizedTasks();
 }
