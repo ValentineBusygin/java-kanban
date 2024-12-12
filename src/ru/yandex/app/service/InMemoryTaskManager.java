@@ -6,6 +6,7 @@ import java.time.ZoneId;
 import java.util.*;
 
 import ru.yandex.app.exceptions.TaskAddingException;
+import ru.yandex.app.exceptions.TaskNotFoundException;
 import ru.yandex.app.model.*;
 
 public class InMemoryTaskManager implements TaskManager {
@@ -18,7 +19,8 @@ public class InMemoryTaskManager implements TaskManager {
     protected final Map<Integer, EpicTask> epicTasks = new HashMap<>();
     protected final Map<Integer, SubTask> subTasks = new HashMap<>();
 
-    protected final Set<Task> sortedByPriorityTasks = new TreeSet<>(Comparator.comparing(Task::getStartTime));
+    protected final Set<Task> sortedByPriorityTasks = new TreeSet<>(Comparator.comparing(Task::getStartTime,
+            Comparator.nullsFirst(Comparator.naturalOrder())));
 
     public InMemoryTaskManager() {
         historyManager = Managers.getDefaultHistory();
@@ -44,8 +46,12 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public void removeTask(int taskID) {
-        Task task = tasks.get(taskID);
+    public void removeTask(int taskId) throws TaskNotFoundException {
+        Task task = tasks.get(taskId);
+        if (task == null) {
+            throw new TaskNotFoundException("Не найден таск с ID " + taskId);
+        }
+
         removeTask(task);
     }
 
@@ -73,11 +79,13 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public void removeEpicTask(int epicTaskId) {
+    public void removeEpicTask(int epicTaskId) throws TaskNotFoundException {
         EpicTask epicTask = epicTasks.get(epicTaskId);
-        if (epicTask != null) {
-            removeEpicTask(epicTask);
+        if (epicTask == null) {
+            throw new TaskNotFoundException("Не найден эпик с ID " + epicTaskId);
         }
+
+        removeEpicTask(epicTask);
     }
 
     @Override
@@ -117,11 +125,13 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public void removeSubTask(int subTaskID) {
-        SubTask subTask = subTasks.get(subTaskID);
-        if (subTask != null) {
-            removeSubTask(subTask);
+    public void removeSubTask(int subTaskId) throws TaskNotFoundException {
+        SubTask subTask = subTasks.get(subTaskId);
+        if (subTask == null) {
+            throw new TaskNotFoundException("Не найден таск с ID " + subTaskId);
         }
+
+        removeSubTask(subTask);
     }
 
     @Override
@@ -129,6 +139,8 @@ public class InMemoryTaskManager implements TaskManager {
         clearTasks();
         clearEpicTasks();
         clearSubTasks();
+
+        nextTaskId = 1;
     }
 
     @Override
@@ -182,6 +194,10 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Task getTaskById(int taskId) {
         Task task = tasks.get(taskId);
+        if (task == null) {
+            throw new TaskNotFoundException("Не найден таск с ID " + taskId);
+        }
+
         historyManager.add(task);
         return task;
     }
@@ -189,6 +205,10 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public EpicTask getEpicTaskById(int epicId) {
         EpicTask epicTask = epicTasks.get(epicId);
+        if (epicTask == null) {
+            throw new TaskNotFoundException("Не найден эпик с ID " + epicId);
+        }
+
         historyManager.add(epicTask);
         return epicTask;
     }
@@ -196,6 +216,10 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public SubTask getSubTaskById(int subTaskId) {
         SubTask subTask = subTasks.get(subTaskId);
+        if (subTask == null) {
+            throw new TaskNotFoundException("Не найден эпик с ID " + subTaskId);
+        }
+
         historyManager.add(subTask);
         return subTask;
     }
@@ -270,6 +294,7 @@ public class InMemoryTaskManager implements TaskManager {
         return historyManager.getHistory();
     }
 
+    @Override
     public Set<Task> getPrioritizedTasks() {
         return sortedByPriorityTasks;
     }
@@ -318,6 +343,7 @@ public class InMemoryTaskManager implements TaskManager {
 
         subTasks.remove(subTaskId);
         historyManager.remove(subTaskId);
+
         sortedByPriorityTasks.remove(subTask);
     }
 
