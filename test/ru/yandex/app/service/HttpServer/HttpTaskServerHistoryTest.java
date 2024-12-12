@@ -20,6 +20,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class HttpTaskServerHistoryTest extends HttpTaskServerTest {
 
+    public HttpTaskServerHistoryTest() throws IOException {
+    }
+
     @Test
     public void testGetHistory() throws IOException, InterruptedException {
         // создаём задачи

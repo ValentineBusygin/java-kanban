@@ -18,6 +18,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class HttpTaskServerPrioritizedTest extends HttpTaskServerTest {
 
+    public HttpTaskServerPrioritizedTest() throws IOException {
+    }
+
     @Test
     public void testGetHistory() throws IOException, InterruptedException {
         // создаём задачи

@@ -344,19 +344,8 @@ public class InMemoryTaskManager implements TaskManager {
         subTasks.remove(subTaskId);
         historyManager.remove(subTaskId);
 
-        try {
-            sortedByPriorityTasks.remove(subTask);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        //removeTaskFromPrioritized(subTask);
+        sortedByPriorityTasks.remove(subTask);
     }
-
-    /*private void removeTaskFromPrioritized(Task task) {
-        if (sortedByPriorityTasks.contains(task)) {
-            sortedByPriorityTasks.remove(task);
-        }
-    }*/
 
     protected void recalculateEpicStatus(EpicTask epicTask) {
         List<Integer> subTaskIds = epicTask.getSubTaskIds();

@@ -19,6 +19,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class HttpTaskServerEpicTest extends HttpTaskServerTest {
 
+    public HttpTaskServerEpicTest() throws IOException {
+    }
+
     @Test
     public void testAddEpic() throws IOException, InterruptedException {
         // создаём задачу

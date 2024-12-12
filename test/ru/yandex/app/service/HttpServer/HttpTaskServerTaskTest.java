@@ -24,6 +24,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class HttpTaskServerTaskTest extends HttpTaskServerTest {
 
+    public HttpTaskServerTaskTest() throws IOException {
+    }
+
     @Test
     public void testAddTask() throws IOException, InterruptedException {
         // создаём задачу
