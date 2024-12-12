@@ -1,7 +1,6 @@
 package ru.yandex.app.service.Handlers;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
 import ru.yandex.app.exceptions.TaskAddingException;
 import ru.yandex.app.exceptions.TaskNotFoundException;
